@@ -60,10 +60,16 @@ namespace Knightware.Threading.Tasks
             return true;
         }
 
-        public void Shutdown()
+        /// <summary>
+        /// Shuts down the auto reset worker.
+        /// </summary>
+        /// <param name="maxWait">Amount of time, in milliseconds, to wait for a current running task to complete.</param>
+        /// <returns>True if shutdown was successful, or false if maxWait elapsed.  A return of false indicates the worker task has not yet completed.</returns>
+        public async Task<bool> ShutdownAsync(int maxWait = Timeout.Infinite)
         {
             IsRunning = false;
 
+            bool timedOut = false;
             if (isWorkerRunning)
             {
                 if (asyncResetEvent != null)
@@ -71,15 +77,29 @@ namespace Knightware.Threading.Tasks
                     asyncResetEvent.Set();
                 }
 
+                DateTime starttime = DateTime.Now;
                 while (isWorkerRunning)
                 {
-                    Task.Delay(10).Wait();
+                    await Task.Delay(10);
+
+                    if (maxWait != Timeout.Infinite && starttime.AddMilliseconds(maxWait) < DateTime.Now)
+                    {
+                        timedOut = true;
+                        break;
+                    }
                 }
             }
 
             workerMethod = null;
             checkForContinueMethod = null;
             asyncResetEvent = null;
+
+            return !timedOut;
+        }
+
+        public void Shutdown()
+        {
+            ShutdownAsync().Wait();
         }
 
         /// <summary>

@@ -61,14 +61,26 @@ namespace Knightware.Threading.Tasks
 
         public void Shutdown()
         {
+            ShutdownAsync().Wait();
+        }
+
+        /// <summary>
+        /// Shuts down the async list processor.
+        /// </summary>
+        /// <param name="maxWait">Amount of time, in milliseconds, to wait for a current running task to complete.</param>
+        /// <returns>True if shutdown was successful, or false if maxWait elapsed.  A return of false indicates the worker task has not yet completed.</returns>
+        public async Task<bool> ShutdownAsync(int maxWait = System.Threading.Timeout.Infinite)
+        {
             IsRunning = false;
 
+            bool success = true;
             if (worker != null)
             {
-                worker.Shutdown();
+                success = await worker.ShutdownAsync(maxWait);
             }
 
             internalQueue.Clear();
+            return success;
         }
 
         public void Add(T newItem)
