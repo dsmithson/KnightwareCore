@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 namespace Knightware.Threading.Tasks
 {
     /// <summary>
-    /// Manages a collection of items which can be added to in a thread-safe mannor, and will be processed sequentially
+    /// Manages a collection of items which can be added to in a thread-safe manner, and will be processed sequentially
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class AsyncListProcessor<T>
