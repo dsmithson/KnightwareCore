@@ -1,20 +1,26 @@
-﻿using System.Resources;
-using System.Reflection;
+﻿using System.Reflection;
 using System.Runtime.CompilerServices;
 using System.Runtime.InteropServices;
 
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("KnightwareCore")]
-[assembly: AssemblyDescription("Portable class library providing core classes and helpers for threading, networking, and other primitives.")]
+[assembly: AssemblyTitle("KnightwareCoreDesktop")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Knightware")]
-[assembly: AssemblyProduct("KnightwareCore")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("KnightwareCoreDesktop")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
-[assembly: NeutralResourcesLanguage("en")]
+
+// Setting ComVisible to false makes the types in this assembly not visible 
+// to COM components.  If you need to access a type in this assembly from 
+// COM, set the ComVisible attribute to true on that type.
+[assembly: ComVisible(false)]
+
+// The following GUID is for the ID of the typelib if this project is exposed to COM
+[assembly: Guid("1e8fa111-edef-4d0d-ad34-1e97ce90f762")]
 
 // Version information for an assembly consists of the following four values:
 //

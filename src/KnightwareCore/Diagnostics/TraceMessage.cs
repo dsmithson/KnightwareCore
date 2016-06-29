@@ -16,6 +16,17 @@ namespace Knightware.Diagnostics
 
         public DateTime LogTime { get; set; }
 
+        public string SenderShortName
+        {
+            get
+            {
+                if(Sender == null)
+                    return "<Unknown>";
+                else
+                    return Sender.GetType().Name;
+            }
+        }
+
         public TraceMessage()
         {
             LogTime = DateTime.Now;

@@ -14,8 +14,8 @@ namespace Knightware.Net.Sockets
 
         int ServerPort { get; }
 
-        Task<bool> Startup(string serverIP, int serverPort);
+        Task<bool> StartupAsync(string serverIP, int serverPort);
 
-        void Shutdown();
+        Task ShutdownAsync();
     }
 }

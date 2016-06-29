@@ -113,7 +113,7 @@ namespace Knightware
         }
         
         /// <summary>
-        /// Initializes a new instance of the TimedCacheWeakReference<T> class that references the specified object
+        /// Initializes a new instance of the TimedCacheWeakReference&lt;T&gt; class that references the specified object
         /// </summary>
         /// <param name="target">The object to reference, or null</param>
         public TimedCacheWeakReference(T target, TimeSpan cacheDuration)
@@ -152,7 +152,7 @@ namespace Knightware
         }
 
         /// <summary>
-        /// Tries to retrieve the target object that is referenced by the current System.WeakReference<T> object.
+        /// Tries to retrieve the target object that is referenced by the current System.WeakReference&lt;T&gt; object.
         /// </summary>
         /// <param name="target">When this method returns, contains the target object, if it is available.  This parameter is treated as uninitialized.</param>
         /// <returns>true if the target was retrieved; otherwise, false.</returns>

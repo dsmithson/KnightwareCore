@@ -1,0 +1,21 @@
+<?xml version="1.0"?>
+<package >
+  <metadata>
+    <id>$id$</id>
+    <version>$version$</version>
+    <title>$title$</title>
+    <authors>Derek Smithson</authors>
+    <owners>Derek Smithson</owners>
+    <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
+    <projectUrl>https://github.com/dsmithson/KnightwareCore</projectUrl>
+    <requireLicenseAcceptance>false</requireLicenseAcceptance>
+    <description>$description$</description>
+    <releaseNotes>Changed shutdown methods on async worker classes to ShutdownAsync and added BatchProcessor class.  Also misc fixes and improvements.</releaseNotes>
+    <copyright>Copyright 2016</copyright>
+    <tags>knightware</tags>
+    <dependencies>
+        <dependency id="PCLStorage" version="1.0.2" />
+		<dependency id="Microsoft.Tpl.Dataflow" version="4.5.24" />
+    </dependencies>
+  </metadata>
+</package>

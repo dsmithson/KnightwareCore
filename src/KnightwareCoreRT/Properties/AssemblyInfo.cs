@@ -6,11 +6,11 @@ using System.Runtime.InteropServices;
 // General Information about an assembly is controlled through the following 
 // set of attributes. Change these attribute values to modify the information
 // associated with an assembly.
-[assembly: AssemblyTitle("KnightwareCore")]
-[assembly: AssemblyDescription("Portable class library providing core classes and helpers for threading, networking, and other primitives.")]
+[assembly: AssemblyTitle("KnightwareCoreRT")]
+[assembly: AssemblyDescription("")]
 [assembly: AssemblyConfiguration("")]
-[assembly: AssemblyCompany("Knightware")]
-[assembly: AssemblyProduct("KnightwareCore")]
+[assembly: AssemblyCompany("")]
+[assembly: AssemblyProduct("KnightwareCoreRT")]
 [assembly: AssemblyCopyright("Copyright ©  2016")]
 [assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
