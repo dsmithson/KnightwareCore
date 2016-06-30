@@ -3,65 +3,79 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
+using System.Threading.Tasks.Dataflow;
 
 namespace Knightware.Threading.Tasks
 {
     /// <summary>
-    /// Manages a collection of items which can be added to in a thread-safe manner, and will be processed sequentially
+    /// Manages a collection of items which can be added to in a thread-safe mannor, and will be processed sequentially
     /// </summary>
     /// <typeparam name="T"></typeparam>
     public class AsyncListProcessor<T>
     {
-        private readonly AutoResetWorker worker = new AutoResetWorker();
-        private readonly Queue<T> internalQueue = new Queue<T>();
+        private ActionBlock<T> workerBlock;
+        private CancellationTokenSource cancellationTokenSource;
         private Func<AsyncListProcessorItemEventArgs<T>, Task> processItem;
         private Func<bool> checkForContinueMethod;
 
         public bool IsRunning { get; private set; }
 
         /// <summary>
-        /// Maximimum items to allow to be in the queue, or 0 for no limit
+        /// Number of threads that will be used to process items
         /// </summary>
-        public int MaximumQueueCount { get; set; }
-        
-        public AsyncListProcessor(Func<AsyncListProcessorItemEventArgs<T>, Task> processItem, Func<bool> checkForContinueMethod = null)
+        public int MaxDegreeOfParallelism { get; private set; }
+
+        /// <summary>
+        /// Maximimum items to allow to be in the queue, or 0 for no limit.
+        /// </summary>
+        public int MaximumQueueCount { get; private set; }
+
+        public AsyncListProcessor(Func<AsyncListProcessorItemEventArgs<T>, Task> processItem, Func<bool> checkForContinueMethod = null, int maxDegreeOfParallelism = 1, int maxQueueCount = 0)
         {
             if (processItem == null)
                 throw new ArgumentException("ProcessItem may not be null", "processItem");
 
             this.processItem = processItem;
             this.checkForContinueMethod = checkForContinueMethod;
+            this.MaxDegreeOfParallelism = maxDegreeOfParallelism;
         }
-        
-        public bool Startup()
+
+        public async Task<bool> StartupAsync()
         {
-            Shutdown();
+            await ShutdownAsync();
             IsRunning = true;
 
-            Func<bool> continueWorking = () =>
+            this.cancellationTokenSource = new CancellationTokenSource();
+            
+            var workerBlockOptions = new ExecutionDataflowBlockOptions()
             {
-                if (!IsRunning)
-                    return false;
-                else if (checkForContinueMethod != null)
-                    return checkForContinueMethod();
-                else
-                    return true;
+                MaxDegreeOfParallelism = MaxDegreeOfParallelism,
+                CancellationToken = cancellationTokenSource.Token
             };
-
-            if (!worker.Startup(collectionProcessorWorker, null, continueWorking))
+            if (MaximumQueueCount > 0)
             {
-                TraceQueue.Trace(this, TracingLevel.Warning, "Failed to startup worker.  Shutting down.");
-                Shutdown();
-                return false;
+                workerBlockOptions.BoundedCapacity = MaximumQueueCount;
             }
 
-            return true;
-        }
+            this.workerBlock = new ActionBlock<T>(
+                async (item) =>
+                {
+                    try
+                    {
+                        //Check to see that we should still be running
+                        if (IsRunning && (checkForContinueMethod == null || checkForContinueMethod()) && !workerBlockOptions.CancellationToken.IsCancellationRequested)
+                            await processItem(new AsyncListProcessorItemEventArgs<T>(item));
+                    }
+                    catch (Exception ex)
+                    {
+                        TraceQueue.Trace(this, TracingLevel.Warning, "{0} occurred while processing item: {1}", ex.GetType().Name, ex.Message);
+                    }
+                },
+                workerBlockOptions);
 
-        public void Shutdown()
-        {
-            ShutdownAsync().Wait();
+            return true;
         }
 
         /// <summary>
@@ -73,110 +87,46 @@ namespace Knightware.Threading.Tasks
         {
             IsRunning = false;
 
-            bool success = true;
-            if (worker != null)
+            try
             {
-                success = await worker.ShutdownAsync(maxWait);
-            }
+                if (workerBlock != null)
+                {
+                    workerBlock.Complete();
+                    cancellationTokenSource.Cancel();
+                    await workerBlock.Completion;
 
-            internalQueue.Clear();
-            return success;
+                    workerBlock = null;
+                    cancellationTokenSource = null;
+                }
+                return true;
+            }
+            catch (TaskCanceledException)
+            {
+                workerBlock = null;
+                cancellationTokenSource = null;
+                return true;
+            }
+            catch (Exception ex)
+            {
+                TraceQueue.Trace(this, TracingLevel.Error, "{0} occurred while shutting down AsyncListProcessor: {1}", ex.GetType().Name, ex.Message);
+                return false;
+            }
         }
 
         public void Add(T newItem)
         {
-            if (newItem == null)
+            if (newItem == null || !IsRunning || workerBlock == null)
                 return;
 
-            lock (internalQueue)
-            {
-                internalQueue.Enqueue(newItem);
-
-                //Remove extra items
-                if(MaximumQueueCount > 0 && internalQueue.Count > MaximumQueueCount)
-                {
-                    while(internalQueue.Count > MaximumQueueCount)
-                    {
-                        internalQueue.Dequeue();
-                    }
-                }
-            }
-            worker.Set();
+            workerBlock.Post(newItem);
         }
 
         public void AddRange(IEnumerable<T> newItems)
         {
-            if (newItems == null)
-                return;
-
-            lock (internalQueue)
+            if (newItems != null)
             {
                 foreach (T newItem in newItems)
-                {
-                    internalQueue.Enqueue(newItem);
-                }
-
-                //Remove extra items
-                if (MaximumQueueCount > 0 && internalQueue.Count > MaximumQueueCount)
-                {
-                    while (internalQueue.Count > MaximumQueueCount)
-                    {
-                        internalQueue.Dequeue();
-                    }
-                }
-            }
-            worker.Set();
-        }
-
-        private async Task collectionProcessorWorker(object state)
-        {
-            while (IsRunning && internalQueue.Count > 0)
-            {
-                try
-                {
-                    //De-Queue an item for processing
-                    T item;
-                    lock (internalQueue)
-                    {
-                        item = internalQueue.Dequeue();
-                    }
-
-                    //Process the current item
-                    await ProcessSingleItem(item);
-                }
-                catch (Exception ex)
-                {
-                    TraceQueue.Trace(this, TracingLevel.Warning, "{0} occurred while processing AsyncList Item: {1}", ex.GetType().Name, ex.Message);
-                }
-            }
-        }
-
-        private async Task ProcessSingleItem(T item)
-        {
-            try
-            {
-                //Process the current item
-                var args = new AsyncListProcessorItemEventArgs<T>(
-                    item,
-                    () => Peek(),
-                    (subItem) => ProcessSingleItem(subItem));
-
-                await processItem(args);
-            }
-            catch (Exception ex)
-            {
-                TraceQueue.Trace(this, TracingLevel.Warning, "{0} occurred while processing AsyncList Item: {1}", ex.GetType().Name, ex.Message);
-            }
-        }
-
-        private T Peek()
-        {
-            lock (internalQueue)
-            {
-                if (internalQueue.Count == 0)
-                    return default(T);
-
-                return internalQueue.Peek();
+                    Add(newItem);
             }
         }
     }

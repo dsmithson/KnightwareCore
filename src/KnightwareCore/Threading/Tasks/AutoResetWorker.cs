@@ -42,9 +42,9 @@ namespace Knightware.Threading.Tasks
         /// </summary>
         private Func<object, Task> workerMethod;
 
-        public bool Startup(Func<object, Task> workerMethod, object workerState, Func<bool> checkForContinueMethod = null)
+        public async Task<bool> StartupAsync(Func<object, Task> workerMethod, object workerState, Func<bool> checkForContinueMethod = null)
         {
-            Shutdown();
+            await ShutdownAsync();
 
             if (workerMethod == null)
                 throw new ArgumentException("WorkerMethod cannot be null", "workerMethod");
@@ -56,7 +56,7 @@ namespace Knightware.Threading.Tasks
             this.checkForContinueMethod = checkForContinueMethod;
 
             asyncResetEvent = new AsyncAutoResetEvent();
-            Task.Factory.StartNew(() => AsyncWorker(), TaskCreationOptions.LongRunning);
+            await Task.Factory.StartNew(() => AsyncWorker(), TaskCreationOptions.LongRunning);
             return true;
         }
 
@@ -95,11 +95,6 @@ namespace Knightware.Threading.Tasks
             asyncResetEvent = null;
 
             return !timedOut;
-        }
-
-        public void Shutdown()
-        {
-            ShutdownAsync().Wait();
         }
 
         /// <summary>

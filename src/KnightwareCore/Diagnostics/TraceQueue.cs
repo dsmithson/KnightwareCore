@@ -54,9 +54,8 @@ namespace Knightware.Diagnostics
         static TraceQueue()
         {
             //Initialize our message queue
-            messageQueue = new AsyncListProcessor<TraceMessage>(ProcessQueue);
-            messageQueue.MaximumQueueCount = maxMessageQueueCount;
-            messageQueue.Startup();
+            messageQueue = new AsyncListProcessor<TraceMessage>(ProcessQueue, maxQueueCount: maxMessageQueueCount);
+            Task t = messageQueue.StartupAsync();
         }
 
         #region Trace Overloads

@@ -6,17 +6,15 @@ using System.Threading.Tasks;
 
 namespace Knightware.Net.Sockets
 {
-    public delegate void UDPDataReceivedHandler(object sender, DataReceivedEventArgs e);
-
     public interface IMulticastListener
     {
         bool IsRunning { get; }
         string MulticastIP { get; }
         int MulticastPort { get; }
         
-        event UDPDataReceivedHandler DataReceived;
+        event DataReceivedHandler DataReceived;
 
-        Task<bool> Startup(string multicastIP, int multicastPort);
-        void Shutdown();
+        Task<bool> StartupAsync(string multicastIP, int multicastPort);
+        Task ShutdownAsync();
     }
 }
