@@ -73,7 +73,7 @@ namespace Knightware.Net
 
             if (socket != null)
             {
-                socket.Close();
+                socket.Dispose();
                 socket.Dispose();
                 socket = null;
             }
@@ -81,36 +81,41 @@ namespace Knightware.Net
             return Task.FromResult(true);
         }
 
-        private bool BeginListening()
+        private bool BeginListening(SocketAsyncEventArgs args = null)
         {
             if (!IsRunning || socket == null)
                 return false;
 
-            EndPoint sender = (EndPoint)new IPEndPoint(IPAddress.Any, 0);
-            byte[] buffer = new byte[1500];
-            socket.BeginReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref sender, new AsyncCallback(socket_DataReceived), buffer);
-            return true;
+            if (args == null)
+            {
+                args = new SocketAsyncEventArgs()
+                {
+                    RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0)
+                };
+                byte[] buffer = new byte[1500];
+                args.SetBuffer(buffer, 0, buffer.Length);
+                args.Completed += socket_DataReceived;
+            }
+            return socket.ReceiveFromAsync(args);
         }
 
-        private void socket_DataReceived(IAsyncResult ar)
+        private void socket_DataReceived(object sender, SocketAsyncEventArgs e)
         {
-            if (!IsRunning || socket == null)
+            if (!IsRunning || socket == null || e?.BytesTransferred <= 0)
                 return;
 
             try
             {
                 EndPoint remoteEP = new IPEndPoint(IPAddress.Any, MulticastPort);
-                int count = socket.EndReceiveFrom(ar, ref remoteEP);
-                if (count > 0)
-                {
-                    byte[] buffer = (byte[])ar.AsyncState;
-                    OnDataReceived(new DataReceivedEventArgs()
+                byte[] buffer = new byte[e.BytesTransferred];
+                Array.Copy(e.Buffer, 0, buffer, 0, buffer.Length);
+
+                OnDataReceived(new DataReceivedEventArgs()
                     {
                         Data = buffer,
-                        Length = count,
-                        SenderAddress = ((IPEndPoint)remoteEP).Address.ToString()
+                        Length = e.BytesTransferred,
+                        SenderAddress = e.RemoteEndPoint.ToString()
                     });
-                }
             }
             catch (Exception ex)
             {
@@ -119,7 +124,7 @@ namespace Knightware.Net
             finally
             {
                 //Setup for next packet
-                BeginListening();
+                BeginListening(e);
             }
         }
     }

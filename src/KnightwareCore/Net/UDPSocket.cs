@@ -89,17 +89,24 @@ namespace Knightware.Net
             return Task.FromResult(true);
         }
 
-        private bool BeginReceive()
+        private bool BeginReceive(SocketAsyncEventArgs args = null)
         {
             if (socket == null || !IsRunning)
                 return false;
 
             try
             {
-                byte[] buffer = new byte[1500];
-                EndPoint remoteEP = new IPEndPoint(server, ServerPort);
-                socket.BeginReceiveFrom(buffer, 0, buffer.Length, SocketFlags.None, ref remoteEP, socket_DataReceived, buffer);
-                return true;
+                if (args == null)
+                {
+                    args = new SocketAsyncEventArgs()
+                    {
+                        RemoteEndPoint = new IPEndPoint(server, ServerPort)
+                    };
+                    byte[] buffer = new byte[1500];
+                    args.SetBuffer(buffer, 0, buffer.Length);
+                    args.Completed += socket_DataReceived;
+                }
+                return socket.ReceiveFromAsync(args);
             }
             catch (Exception ex)
             {
@@ -110,19 +117,13 @@ namespace Knightware.Net
             }
         }
 
-        void socket_DataReceived(IAsyncResult ar)
+        private void socket_DataReceived(object sender, SocketAsyncEventArgs e)
         {
-            if (!IsRunning || socket == null)
+            if (!IsRunning || socket == null || e?.BytesTransferred <= 0)
                 return;
 
             try
             {
-                byte[] rxBuffer = (byte[])ar.AsyncState;
-                EndPoint remoteEP = new IPEndPoint(server, ServerPort);
-                int count = socket.EndReceiveFrom(ar, ref remoteEP);
-                if (count <= 0)
-                    return;
-
                 TaskCompletionSource<byte[]> tcs = null;
                 lock (messageReceiptAwaiters)
                 {
@@ -132,8 +133,8 @@ namespace Knightware.Net
                     }
                 }
 
-                byte[] buffer = new byte[count];
-                Array.Copy(rxBuffer, 0, buffer, 0, buffer.Length);
+                byte[] buffer = new byte[e.BytesTransferred];
+                Array.Copy(e.Buffer, 0, buffer, 0, buffer.Length);
 
                 //Return result to any retrieve awaiters
                 if (tcs != null)
@@ -141,7 +142,8 @@ namespace Knightware.Net
                     tcs.TrySetResult(buffer);
                 }
 
-                OnDataReceived(new DataReceivedEventArgs(remoteEP.ToString(), buffer));
+                var remoteEP = (IPEndPoint)e.RemoteEndPoint;
+                OnDataReceived(new DataReceivedEventArgs(remoteEP.Address.ToString(), buffer));
             }
             catch (Exception ex)
             {
@@ -149,7 +151,7 @@ namespace Knightware.Net
             }
             finally
             {
-                BeginReceive();
+                BeginReceive(e);
             }
         }
 

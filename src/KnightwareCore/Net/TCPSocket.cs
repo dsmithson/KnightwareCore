@@ -100,7 +100,7 @@ namespace Knightware.Net
 
             if(client != null)
             {
-                client.Close();
+                client.Dispose();
                 client = null;
             }
 
