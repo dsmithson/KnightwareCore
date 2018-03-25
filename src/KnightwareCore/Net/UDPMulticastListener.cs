@@ -96,7 +96,19 @@ namespace Knightware.Net
                 args.SetBuffer(buffer, 0, buffer.Length);
                 args.Completed += socket_DataReceived;
             }
-            return socket.ReceiveFromAsync(args);
+            else
+            {
+                args.RemoteEndPoint = new IPEndPoint(IPAddress.Any, 0);
+                Array.Clear(args.Buffer, 0, args.Buffer.Length);
+            }
+
+            //Begin asynchronous receive
+            if(!socket.ReceiveFromAsync(args))
+            {
+                //Request completed and data is immediately available
+                socket_DataReceived(socket, args);
+            }
+            return true;
         }
 
         private void socket_DataReceived(object sender, SocketAsyncEventArgs e)
@@ -114,7 +126,7 @@ namespace Knightware.Net
                     {
                         Data = buffer,
                         Length = e.BytesTransferred,
-                        SenderAddress = e.RemoteEndPoint.ToString()
+                        SenderAddress = ((IPEndPoint)e.RemoteEndPoint).Address.ToString()
                     });
             }
             catch (Exception ex)
