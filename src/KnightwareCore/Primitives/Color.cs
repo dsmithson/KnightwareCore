@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -111,6 +112,38 @@ namespace Knightware.Primitives
 
         public static Color FromArgb(byte a, byte r, byte g, byte b)
         {
+            return new Color(a, r, g, b);
+        }
+
+        public static Color FromHexString(string hexString)
+        {
+            int index = 0;
+            if (hexString.StartsWith("#"))
+            {
+                index = 1;
+            }
+            else if (hexString.StartsWith("0x"))
+            {
+                index = 2;
+            }
+
+            byte a = 0xff;
+            if(hexString.Length - index == 8)
+            {
+                a = byte.Parse(hexString.Substring(index, 2), NumberStyles.HexNumber);
+                index += 2;
+            }
+            else if (hexString.Length - index != 6)
+            {
+                throw new Exception(string.Format("{0} is not a valid color string.", hexString));
+            }
+
+            byte r = byte.Parse(hexString.Substring(index, 2), NumberStyles.HexNumber);
+            index += 2;
+            byte g = byte.Parse(hexString.Substring(index, 2), NumberStyles.HexNumber);
+            index += 2;
+            byte b = byte.Parse(hexString.Substring(index, 2), NumberStyles.HexNumber);
+
             return new Color(a, r, g, b);
         }
     }

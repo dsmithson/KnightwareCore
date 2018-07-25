@@ -208,7 +208,10 @@ namespace Knightware.Net
             if (tcs.Task.Exception == null && tcs.Task.Status == TaskStatus.RanToCompletion)
                 return tcs.Task.Result;
             else
+            {
+                messageReceiptAwaiters.Pop();
                 return null;
+            }
         }
     }
 }
