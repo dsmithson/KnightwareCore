@@ -34,10 +34,7 @@ namespace Knightware.Threading.Tasks
 
         public AsyncListProcessor(Func<AsyncListProcessorItemEventArgs<T>, Task> processItem, Func<bool> checkForContinueMethod = null, int maxDegreeOfParallelism = 1, int maxQueueCount = 0)
         {
-            if (processItem == null)
-                throw new ArgumentException("ProcessItem may not be null", "processItem");
-
-            this.processItem = processItem;
+            this.processItem = processItem ?? throw new ArgumentException("ProcessItem may not be null", "processItem");
             this.checkForContinueMethod = checkForContinueMethod;
             this.MaxDegreeOfParallelism = maxDegreeOfParallelism;
         }
