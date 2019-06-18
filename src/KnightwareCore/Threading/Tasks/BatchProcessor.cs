@@ -153,7 +153,11 @@ namespace Knightware.Threading.Tasks
                 {
                     //Begin our monitoring timer
                     queueFirstItemStopwatch = queueLatestItemStopwatch;
-                    batchTimer = new Timer(OnTimerElapsed, null, this.MinimumTimeInterval, this.MinimumTimeInterval);
+                    batchTimer = new Timer((state) =>
+                    {
+                        Task t = OnTimerElapsed(state);
+                    }, 
+                    null, this.MinimumTimeInterval, this.MinimumTimeInterval);
                 }
             }
 
@@ -175,7 +179,7 @@ namespace Knightware.Threading.Tasks
         /// Worker for the timer which fires at the MinimumTimeInterval which sends the current queue to be processed when min/max elapsed time requirements met
         /// </summary>
         /// <param name="state"></param>
-        private async void OnTimerElapsed(object state)
+        private async Task OnTimerElapsed(object state)
         {
             //Stop the timer while we process the current iteration
             batchTimer.Change(-1, -1);

@@ -119,7 +119,7 @@ namespace Knightware.Net
 
         private void socket_DataReceived(object sender, SocketAsyncEventArgs e)
         {
-            if (!IsRunning || socket == null || e?.BytesTransferred <= 0)
+            if (!IsRunning || socket == null || e == null || e.BytesTransferred <= 0)
                 return;
 
             try

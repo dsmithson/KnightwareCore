@@ -10,9 +10,9 @@ namespace Knightware.IO
 {
     public class GZipStreamDecompressor : IGZipStreamDecompressor
     {
-        public byte[] Decompress(byte[] compressedData, int offset, int count, int uncompressedDataLength)
+        public byte[] Decompress(byte[] zipCompressedData, int offset, int count, int uncompressedDataLength)
         {
-            using (MemoryStream compressedStream = new MemoryStream(compressedData, offset, count, false))
+            using (MemoryStream compressedStream = new MemoryStream(zipCompressedData, offset, count, false))
             {
                 using (var decompressor = new GZipStream(compressedStream, CompressionMode.Decompress))
                 {

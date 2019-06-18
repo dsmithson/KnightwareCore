@@ -109,7 +109,7 @@ namespace Knightware.Threading.Tasks
             }
         }
 
-        private async void AsyncWorker()
+        private async Task AsyncWorker()
         {
             isWorkerRunning = true;
 
