@@ -248,7 +248,7 @@ namespace Knightware.Threading.Tasks
         /// </summary>
         public class BatchProcessorRequest : IBatchProcessorRequest<TRequest, TResponse>
         {
-            private InternalBatchProcessorItem source;
+            private readonly InternalBatchProcessorItem source;
             public TRequest Request { get; set; }
 
             internal BatchProcessorRequest(InternalBatchProcessorItem source)
@@ -281,7 +281,7 @@ namespace Knightware.Threading.Tasks
         }
     }
 
-    public interface IBatchProcessorRequest<TRequest, TResponse>
+    public interface IBatchProcessorRequest<TRequest, in TResponse>
     {
         TRequest Request { get; set; }
         void SetResponse(TResponse response);

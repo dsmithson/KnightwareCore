@@ -32,21 +32,6 @@ namespace Knightware.Threading
             this.context = context;
         }
 
-        //public void Invoke(Action action)
-        //{
-        //    //Wrap into a dummy bool returning function
-        //    Invoke<bool>(() => 
-        //        {
-        //            action();
-        //            return true;
-        //        });
-        //}
-
-        //public T Invoke<T>(Func<T> func)
-        //{
-        //    return BeginInvoke(func).Result;
-        //}
-
         public Task BeginInvoke(Action action)
         {
             return BeginInvoke<bool>(() =>

@@ -8,13 +8,9 @@ namespace Knightware.Collections
 {
     public class Grouping<TKey, TElement> : IGrouping<TKey, TElement>
     {
-        private IEnumerable<TElement> items;
+        private readonly IEnumerable<TElement> items;
 
-        public TKey Key
-        {
-            get;
-            private set;
-        }
+        public TKey Key { get; private set; }
 
         public Grouping(TKey key, IEnumerable<TElement> items)
         {

@@ -51,7 +51,6 @@ namespace Knightware
                     //Initialize our timer if it isn't already running
                     if (cacheExpirationTimer == null)
                     {
-                        //TODO:  May need to make this evaluate on a shorter time scale
                         cacheExpirationTimer = new Timer(OnCacheExpirationTimer_Elapsed, null, cacheTimerInterval, cacheTimerInterval);
                     }
                 }

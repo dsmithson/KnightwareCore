@@ -17,8 +17,8 @@ namespace Knightware.Threading.Tasks
     {
         private ActionBlock<T> workerBlock;
         private CancellationTokenSource cancellationTokenSource;
-        private Func<AsyncListProcessorItemEventArgs<T>, Task> processItem;
-        private Func<bool> checkForContinueMethod;
+        private readonly Func<AsyncListProcessorItemEventArgs<T>, Task> processItem;
+        private readonly Func<bool> checkForContinueMethod;
 
         public bool IsRunning { get; private set; }
 
