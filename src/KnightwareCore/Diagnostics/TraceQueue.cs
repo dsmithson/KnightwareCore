@@ -19,13 +19,6 @@ namespace Knightware.Diagnostics
         /// Event raised when a new Trace message is generated
         /// </summary>
         public static event TraceMessageHandler TraceMessageRaised;
-        private static void OnTraceMessageRaised(TraceMessage message)
-        {
-            if (TraceMessageRaised != null)
-            {
-                TraceMessageRaised(message);
-            }
-        }
 
         /// <summary>
         /// Event raised when the tracing level has changed
@@ -90,9 +83,9 @@ namespace Knightware.Diagnostics
 
         private static Task ProcessQueue(AsyncListProcessorItemEventArgs<TraceMessage> args)
         {
-            if(args != null && args.Item != null && TraceMessageRaised != null)
+            if(args?.Item != null)
             {
-                TraceMessageRaised(args.Item);
+                TraceMessageRaised?.Invoke(args.Item);
             }
             return Task.FromResult(true);
         }

@@ -54,11 +54,6 @@ namespace Knightware.Collections
             collections.Clear();
         }
 
-        void notifying_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
-        {
-            OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
-        }
-
         void collections_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
         {
             if (e.Action == NotifyCollectionChangedAction.Reset)

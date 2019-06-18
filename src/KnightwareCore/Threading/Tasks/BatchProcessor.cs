@@ -153,7 +153,11 @@ namespace Knightware.Threading.Tasks
                 {
                     //Begin our monitoring timer
                     queueFirstItemStopwatch = queueLatestItemStopwatch;
-                    batchTimer = new Timer(OnTimerElapsed, null, this.MinimumTimeInterval, this.MinimumTimeInterval);
+                    batchTimer = new Timer((state) =>
+                    {
+                        Task t = OnTimerElapsed(state);
+                    }, 
+                    null, this.MinimumTimeInterval, this.MinimumTimeInterval);
                 }
             }
 
@@ -175,7 +179,7 @@ namespace Knightware.Threading.Tasks
         /// Worker for the timer which fires at the MinimumTimeInterval which sends the current queue to be processed when min/max elapsed time requirements met
         /// </summary>
         /// <param name="state"></param>
-        private async void OnTimerElapsed(object state)
+        private async Task OnTimerElapsed(object state)
         {
             //Stop the timer while we process the current iteration
             batchTimer.Change(-1, -1);
@@ -244,7 +248,7 @@ namespace Knightware.Threading.Tasks
         /// </summary>
         public class BatchProcessorRequest : IBatchProcessorRequest<TRequest, TResponse>
         {
-            private InternalBatchProcessorItem source;
+            private readonly InternalBatchProcessorItem source;
             public TRequest Request { get; set; }
 
             internal BatchProcessorRequest(InternalBatchProcessorItem source)
@@ -277,7 +281,7 @@ namespace Knightware.Threading.Tasks
         }
     }
 
-    public interface IBatchProcessorRequest<TRequest, TResponse>
+    public interface IBatchProcessorRequest<TRequest, in TResponse>
     {
         TRequest Request { get; set; }
         void SetResponse(TResponse response);

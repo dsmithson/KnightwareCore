@@ -11,7 +11,7 @@ namespace Knightware.Threading.Tasks
     /// </summary>
     public class RequestDeferral
     {
-        private TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
+        private readonly TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
 
         public void Complete()
         {

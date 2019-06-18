@@ -113,12 +113,11 @@ namespace Knightware.Net
 
         private void socket_DataReceived(object sender, SocketAsyncEventArgs e)
         {
-            if (!IsRunning || socket == null || e?.BytesTransferred <= 0)
+            if (!IsRunning || socket == null || e == null || e.BytesTransferred <= 0)
                 return;
 
             try
             {
-                EndPoint remoteEP = new IPEndPoint(IPAddress.Any, MulticastPort);
                 byte[] buffer = new byte[e.BytesTransferred];
                 Array.Copy(e.Buffer, 0, buffer, 0, buffer.Length);
 

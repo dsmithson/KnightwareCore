@@ -155,7 +155,7 @@ namespace Knightware.Threading
             //Release the connection to the pool and trigger the pool to re-evaluate pending connection requests
             using (var lockObject = await resourcePoolLock.LockAsync())
             {
-                ResourcePoolEntry entry = resourcePool.Where(c => object.Equals(c.Connection, acquiredConnection)).FirstOrDefault();
+                ResourcePoolEntry entry = resourcePool.FirstOrDefault(c => object.Equals(c.Connection, acquiredConnection));
                 if (entry != null)
                 {
                     if (resourceShouldBeShutdown)
@@ -221,12 +221,9 @@ namespace Knightware.Threading
             {
                 newConnectionsAdded = true;
                 T connection = await createResourceHandler();
-                if (connection == null)
-                {
-                    //Fail the current initialization.  We'll retry when our auto-elapsed timer expires or someone needs a connection
-                    //TraceQueue.Trace(this, TracingLevel.Warning, "Failed to create connection pool connection");
-                }
-                else
+
+                //If we don't have a connection, we'll retry automatically when our auto-elapsed timer expires or someone needs a connection
+                if (connection != null)
                 {
                     //Create a new connection pool state object to the pool
                     resourcePool.Add(new ResourcePoolEntry(connection));
@@ -254,15 +251,14 @@ namespace Knightware.Threading
                 while (index < requestQueue.Count && availableConnections.Count > 0)
                 {
                     var request = requestQueue[index];
-                    if (!string.IsNullOrEmpty(request.SerializationKey))
+
+                    //Check to see if there is something already running with this serialization key
+                    //in which case we can't yet process this request
+                    if (!string.IsNullOrEmpty(request.SerializationKey) &&
+                        resourcePool.Any(c => c.SerializationKey == request.SerializationKey))
                     {
-                        //Check to see if there is something already running with this serialization key
-                        //in which case we can't yet process this request
-                        if (resourcePool.Any(c => c.SerializationKey == request.SerializationKey))
-                        {
-                            index++;
-                            continue;
-                        }
+                        index++;
+                        continue;
                     }
 
                     //Grab the next available allocation
