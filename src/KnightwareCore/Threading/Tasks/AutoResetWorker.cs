@@ -22,15 +22,7 @@ namespace Knightware.Threading.Tasks
         /// <summary>
         /// When set, will automatically trigger the update method at a defined interval if not triggered manually.  Set to Timeout.InfiniteTimeSpan to disable.
         /// </summary>
-        public TimeSpan PeriodicSignallingTime
-        {
-            get { return periodicSignallingTime; }
-            set
-            {
-                periodicSignallingTime = value;
-            }
-        }
-        private TimeSpan periodicSignallingTime = Timeout.InfiniteTimeSpan;
+        public TimeSpan PeriodicSignallingTime { get; set; } = Timeout.InfiniteTimeSpan;
 
         /// <summary>
         /// Executed before each iteration of the worker to determine if it should still be runing

@@ -38,14 +38,14 @@ namespace Knightware
                         //Register a new item for expiration
                         registeredCacheExpirationItems.Add(new CacheExpirationRecord()
                         {
-                            ExpirationTime = DateTime.Now.Add(classToRegister.cacheDuration),
+                            ExpirationTime = DateTime.Now.Add(classToRegister.CacheDuration),
                             TimedCacheWeakReference = classToRegister
                         });
                     }
                     else
                     {
                         //Extend expiration lease
-                        existing.ExpirationTime = DateTime.Now.Add(classToRegister.cacheDuration);
+                        existing.ExpirationTime = DateTime.Now.Add(classToRegister.CacheDuration);
                     }
 
                     //Initialize our timer if it isn't already running
@@ -101,11 +101,7 @@ namespace Knightware
         private WeakReference<T> weakReference;
         private T strongReference;
 
-        private TimeSpan cacheDuration = TimeSpan.FromMinutes(1);
-        public TimeSpan CacheDuration
-        {
-            get { return cacheDuration; }
-        }
+        public TimeSpan CacheDuration { get; set; }
 
         public bool StrongReferenceAvailable
         {
@@ -118,7 +114,7 @@ namespace Knightware
         /// <param name="target">The object to reference, or null</param>
         public TimedCacheWeakReference(T target, TimeSpan cacheDuration)
         {
-            this.cacheDuration = cacheDuration;
+            this.CacheDuration = cacheDuration;
 
             if(target != null)
                 SetTarget(target);
@@ -126,12 +122,12 @@ namespace Knightware
 
         public void SetTarget(T target)
         {
-            SetTarget(target, cacheDuration);
+            SetTarget(target, CacheDuration);
         }
 
         public void SetTarget(T target, TimeSpan cacheDuration)
         {
-            this.cacheDuration = cacheDuration;
+            this.CacheDuration = cacheDuration;
             this.strongReference = target;
 
             //Set our weak reference

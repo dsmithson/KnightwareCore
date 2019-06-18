@@ -118,7 +118,6 @@ namespace Knightware.Net
 
             try
             {
-                EndPoint remoteEP = new IPEndPoint(IPAddress.Any, MulticastPort);
                 byte[] buffer = new byte[e.BytesTransferred];
                 Array.Copy(e.Buffer, 0, buffer, 0, buffer.Length);
 
