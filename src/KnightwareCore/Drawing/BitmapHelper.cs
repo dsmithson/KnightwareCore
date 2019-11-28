@@ -1,10 +1,5 @@
 ﻿using Knightware.Primitives;
-using System;
-using System.Collections.Generic;
 using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Knightware.Drawing
 {
@@ -36,7 +31,7 @@ namespace Knightware.Drawing
 
             int fileSize = bmpHeaderSize + dibHeaderSize + (strideBytes * height);
             int imageStartPosition = bmpHeaderSize + dibHeaderSize;
-            
+
             //Write out BMP Header
             stream.WriteByte((byte)'B');
             stream.WriteByte((byte)'M');
@@ -60,14 +55,14 @@ namespace Knightware.Drawing
             //Write pixel data now
             byte[] line = new byte[strideBytes];
             int index = 0;
-            for(int i=0 ; i<width ; i++)
+            for (int i = 0; i < width; i++)
             {
                 line[index++] = color.B;
                 line[index++] = color.G;
                 line[index++] = color.R;
             }
 
-            for(int i=0 ; i<height ; i++)
+            for (int i = 0; i < height; i++)
             {
                 stream.Write(line, 0, line.Length);
             }

@@ -1,10 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Knightware.Net.Sockets
 {
@@ -13,7 +7,7 @@ namespace Knightware.Net.Sockets
         bool IsConnected { get; }
 
         Task<int> ReadAsync(byte[] buffer, int offset, int length);
-        
+
         Task<int> ReadAsync(byte[] buffer, int offset, int length, int timeout);
 
         Task WriteAsync(byte[] buffer, int offset, int length);

@@ -1,14 +1,11 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading;
-using System.Threading.Tasks;
-using Knightware.Threading;
 
 namespace Knightware
 {
-    public class TimedCacheWeakReference<T> where T: class
+    public class TimedCacheWeakReference<T> where T : class
     {
         #region Static Cache Expiration Monitor
 
@@ -100,13 +97,19 @@ namespace Knightware
         private WeakReference<T> weakReference;
         private T strongReference;
 
+        /// <summary>
+        /// Amount of time to preserve a strong reference to the wrapped object, before allowing it to be reclaimed by GC
+        /// </summary>
         public TimeSpan CacheDuration { get; set; }
 
+        /// <summary>
+        /// Determines if this WeakReference wrapper currently has a live reference to it's wrapped object
+        /// </summary>
         public bool StrongReferenceAvailable
         {
             get { return strongReference != null; }
         }
-        
+
         /// <summary>
         /// Initializes a new instance of the TimedCacheWeakReference&lt;T&gt; class that references the specified object
         /// </summary>
@@ -115,7 +118,7 @@ namespace Knightware
         {
             this.CacheDuration = cacheDuration;
 
-            if(target != null)
+            if (target != null)
                 SetTarget(target);
         }
 

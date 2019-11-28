@@ -1,8 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Text;
-using System.Threading.Tasks;
 
 namespace Knightware.Text
 {
@@ -20,12 +17,12 @@ namespace Knightware.Text
 
             if (!IsValidHexCharLength(hexString))
                 throw new ArgumentException("Character count for hex string must be divisible by 2 to be valid", "hexString");
-            
+
             byte[] response = new byte[hexString.Length / 2];
 
             int index = 0;
             int parseIndex = 0;
-            while(parseIndex < hexString.Length)
+            while (parseIndex < hexString.Length)
             {
                 string subString = hexString.Substring(parseIndex, 2);
                 response[index++] = byte.Parse(subString, System.Globalization.NumberStyles.HexNumber);

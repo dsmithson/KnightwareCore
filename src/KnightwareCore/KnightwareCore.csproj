@@ -2,6 +2,16 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <Platforms>AnyCPU;x86;x64</Platforms>
+    <Authors>Derek Smithson</Authors>
+    <Company>Knightware</Company>
+    <Product />
+    <Description>Net Standard library providing helpful classes for threading, networking, and other primitives not available in Net Standard.</Description>
+    <Copyright>Copyright 2019</Copyright>
+    <PackageProjectUrl>https://github.com/dsmithson/KnightwareCore</PackageProjectUrl>
+    <PackageTags>knightware</PackageTags>
+    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <RepositoryUrl>https://github.com/dsmithson/KnightwareCore</RepositoryUrl>
+    <RepositoryType>git</RepositoryType>
   </PropertyGroup>
   <ItemGroup>
     <Folder Include="Properties\" />

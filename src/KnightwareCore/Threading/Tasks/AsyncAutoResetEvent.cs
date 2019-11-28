@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -11,7 +9,7 @@ namespace Knightware.Threading.Tasks
     {
         private readonly static Task<bool> completed = Task.FromResult(true);
         private readonly List<AsyncAutoResetEventState> waits = new List<AsyncAutoResetEventState>();
-        private bool signaled; 
+        private bool signaled;
 
         public Task<bool> WaitAsync()
         {

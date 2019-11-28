@@ -1,15 +1,14 @@
 <?xml version="1.0"?>
 <package >
   <metadata>
-    <id>$id$</id>
+    <id>KnightwareCore</id>
     <version>$version$</version>
-    <title>$title$</title>
     <authors>Derek Smithson</authors>
     <owners>Derek Smithson</owners>
     <licenseUrl>http://www.apache.org/licenses/LICENSE-2.0.html</licenseUrl>
     <projectUrl>https://github.com/dsmithson/KnightwareCore</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
-    <description>$description$</description>
+    <description>Net Standard library providing helpful classes for threading, networking, and other primitives not available in Net Standard.</description>
     <releaseNotes>Misc fixes and improvements.</releaseNotes>
     <copyright>Copyright 2019</copyright>
     <tags>knightware</tags>

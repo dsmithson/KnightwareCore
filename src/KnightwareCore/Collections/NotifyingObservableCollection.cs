@@ -1,12 +1,7 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.ComponentModel;
-using System.Reflection;
 
 namespace Knightware.Collections
 {
@@ -40,7 +35,7 @@ namespace Knightware.Collections
             foreach (T item in items)
                 this.Add(item);
         }
-        
+
         protected override void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
         {
             base.OnCollectionChanged(e);
@@ -71,19 +66,19 @@ namespace Knightware.Collections
         {
             OnCollectionItemChanged(new NotifyCollectionItemChangedEventArgs(sender, e.PropertyName, this.IndexOf((T)sender)));
         }
-        
+
         private void hookPropertyChange(T item)
         {
             var propertyChangedItem = item as INotifyPropertyChanged;
-            if(propertyChangedItem != null)
-                propertyChangedItem.PropertyChanged += new PropertyChangedEventHandler(NotifyingObservableCollection_PropertyChanged);                
+            if (propertyChangedItem != null)
+                propertyChangedItem.PropertyChanged += new PropertyChangedEventHandler(NotifyingObservableCollection_PropertyChanged);
         }
 
         private void unhookPropertyChange(T item)
         {
             var propertyChangedItem = item as INotifyPropertyChanged;
             if (propertyChangedItem != null)
-                propertyChangedItem.PropertyChanged -= new PropertyChangedEventHandler(NotifyingObservableCollection_PropertyChanged);                
+                propertyChangedItem.PropertyChanged -= new PropertyChangedEventHandler(NotifyingObservableCollection_PropertyChanged);
         }
     }
 }

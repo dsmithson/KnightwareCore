@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Knightware.Primitives
 {
@@ -35,9 +31,9 @@ namespace Knightware.Primitives
 
         public bool Equals(Thickness other)
         {
-            if (this.Left == other.Left && 
-                this.Right == other.Right && 
-                this.Top == other.Top && 
+            if (this.Left == other.Left &&
+                this.Right == other.Right &&
+                this.Top == other.Top &&
                 this.Bottom == other.Bottom)
                 return true;
             else

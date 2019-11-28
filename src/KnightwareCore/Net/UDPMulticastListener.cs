@@ -1,12 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using Knightware.Diagnostics;
+using Knightware.Net.Sockets;
+using System;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
-using Knightware.Diagnostics;
-using Knightware.Net.Sockets;
 
 namespace Knightware.Net
 {
@@ -103,7 +100,7 @@ namespace Knightware.Net
             }
 
             //Begin asynchronous receive
-            if(!socket.ReceiveFromAsync(args))
+            if (!socket.ReceiveFromAsync(args))
             {
                 //Request completed and data is immediately available
                 socket_DataReceived(socket, args);
@@ -122,11 +119,11 @@ namespace Knightware.Net
                 Array.Copy(e.Buffer, 0, buffer, 0, buffer.Length);
 
                 OnDataReceived(new DataReceivedEventArgs()
-                    {
-                        Data = buffer,
-                        Length = e.BytesTransferred,
-                        SenderAddress = ((IPEndPoint)e.RemoteEndPoint).Address.ToString()
-                    });
+                {
+                    Data = buffer,
+                    Length = e.BytesTransferred,
+                    SenderAddress = ((IPEndPoint)e.RemoteEndPoint).Address.ToString()
+                });
             }
             catch (Exception ex)
             {

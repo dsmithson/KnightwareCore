@@ -4,8 +4,6 @@ using System.Collections.Generic;
 using System.Collections.ObjectModel;
 using System.Collections.Specialized;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Knightware.Collections
 {
@@ -18,7 +16,7 @@ namespace Knightware.Collections
         {
             get { return collections; }
         }
-        
+
         public event NotifyCollectionChangedEventHandler CollectionChanged;
 
         protected void OnCollectionChanged(NotifyCollectionChangedEventArgs e)
@@ -59,7 +57,7 @@ namespace Knightware.Collections
             if (e.Action == NotifyCollectionChangedAction.Reset)
             {
                 //De-register all items
-                while(registeredNotifyingCollections.Count > 0)
+                while (registeredNotifyingCollections.Count > 0)
                 {
                     registeredNotifyingCollections[0].CollectionChanged -= observable_CollectionChanged;
                     registeredNotifyingCollections.RemoveAt(0);
@@ -74,7 +72,7 @@ namespace Knightware.Collections
                     if (observable != null)
                     {
                         observable.CollectionChanged -= observable_CollectionChanged;
-                        if(registeredNotifyingCollections.Contains(observable))
+                        if (registeredNotifyingCollections.Contains(observable))
                             registeredNotifyingCollections.Remove(observable);
                     }
                 }

@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Knightware.Diagnostics
 {
@@ -20,7 +16,7 @@ namespace Knightware.Diagnostics
         {
             get
             {
-                if(Sender == null)
+                if (Sender == null)
                     return "<Unknown>";
                 else
                     return Sender.GetType().Name;

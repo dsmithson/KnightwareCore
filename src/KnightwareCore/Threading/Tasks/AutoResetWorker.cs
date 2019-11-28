@@ -1,8 +1,5 @@
 ﻿using Knightware.Diagnostics;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -18,7 +15,7 @@ namespace Knightware.Threading.Tasks
         private object workerState;
 
         public bool IsRunning { get; private set; }
-        
+
         /// <summary>
         /// When set, will automatically trigger the update method at a defined interval if not triggered manually.  Set to Timeout.InfiniteTimeSpan to disable.
         /// </summary>
@@ -96,7 +93,7 @@ namespace Knightware.Threading.Tasks
         {
             if (IsRunning)
             {
-                if(asyncResetEvent != null)
+                if (asyncResetEvent != null)
                     asyncResetEvent.Set();
             }
         }

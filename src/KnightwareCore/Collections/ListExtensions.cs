@@ -1,8 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Knightware.Collections
 {
@@ -23,15 +21,15 @@ namespace Knightware.Collections
         /// Synchronizes a destination list of items from a provided source list, constrained by the type of object
         /// </summary>
         public static void ConstrainedCopyTo<T, U, K, C>(this IEnumerable<T> source, IList<U> destination, Func<T, K> getSourceKey, Func<C, K> getDestKey, Func<T, C> createNew, Action<T, C> copyFrom, Action<U> onRemoved = null)
-            where C: U
+            where C : U
         {
-            ConstrainedCopyTo<T,U,K>(
+            ConstrainedCopyTo<T, U, K>(
                 source,
                 destination,
                 (item) => item is C,
                 getSourceKey,
                 (item) => getDestKey((C)item),
-                (item) => (U)createNew(item),
+                (item) => createNew(item),
                 (from, to) => copyFrom(from, (C)to),
                 (removed) =>
                 {
@@ -42,13 +40,13 @@ namespace Knightware.Collections
 
         public static void ConstrainedCopyTo<TKey, USrc, UDst>(this IDictionary<TKey, USrc> source, IDictionary<TKey, UDst> destination, Func<UDst, bool> destinationItemsToCompareFilter, Func<USrc, UDst> createNew, Action<USrc, UDst> copyFrom, Action<UDst> onRemoved = null)
         {
-            if(source == null || destination == null)
+            if (source == null || destination == null)
                 return;
 
             //By default, if no dest list filter is provided, all items will be compared
             if (destinationItemsToCompareFilter == null)
                 destinationItemsToCompareFilter = new Func<UDst, bool>(item => true);
-            
+
             //Process updates and deletes
             var removeList = new List<KeyValuePair<TKey, UDst>>();
             foreach (var item in destination)
@@ -70,7 +68,7 @@ namespace Knightware.Collections
                 foreach (var item in removeList)
                 {
                     destination.Remove(item.Key);
-                    if(onRemoved != null)
+                    if (onRemoved != null)
                         onRemoved(item.Value);
                 }
             }
@@ -93,12 +91,12 @@ namespace Knightware.Collections
                 return;
 
             //By default, if no dest list filter is provided, all items will be compared
-            if(destinationItemsToCompareFilter == null)
-                destinationItemsToCompareFilter = new Func<U,bool>(item => true);
+            if (destinationItemsToCompareFilter == null)
+                destinationItemsToCompareFilter = new Func<U, bool>(item => true);
 
             var sourceDict = source.ToDictionary((item) => getSourceKey(item));
             var destDict = destination.Where(destinationItemsToCompareFilter).ToDictionary((item) => getDestKey(item));
-            
+
             //Process updates and deletes
             var removeList = new Dictionary<K, U>();
             foreach (var destItem in destDict)
@@ -120,7 +118,7 @@ namespace Knightware.Collections
                 destDict.Remove(removeItem.Key);
                 destination.Remove(removeItem.Value);
 
-                if(onRemoved != null)
+                if (onRemoved != null)
                     onRemoved(removeItem.Value);
             }
 
@@ -137,10 +135,10 @@ namespace Knightware.Collections
         {
             List<K> keysToRemove = new List<K>();
 
-            foreach(var item in source)
+            foreach (var item in source)
             {
                 if (removeIf(item.Value))
-                    keysToRemove.Add(item.Key);                    
+                    keysToRemove.Add(item.Key);
             }
 
             foreach (K key in keysToRemove)
