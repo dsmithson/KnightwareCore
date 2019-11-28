@@ -1,8 +1,7 @@
-﻿using System;
+﻿using Knightware.Diagnostics;
+using System;
 using System.IO;
 using System.Xml.Linq;
-using Knightware.Diagnostics;
-using Knightware.Primitives;
 
 namespace Knightware.Core
 {
@@ -59,7 +58,7 @@ namespace Knightware.Core
                 return float.TryParse(value, out response) ? response : ReturnDefaultValue(elementName, defaultValue);
             });
         }
-        
+
         public bool Read(XElement parent, string elementName, bool defaultValue)
         {
             return Read(parent, elementName, defaultValue, (value) =>
@@ -114,7 +113,7 @@ namespace Knightware.Core
 
             try
             {
-                return parent.Element(elementName);                
+                return parent.Element(elementName);
             }
             catch (Exception ex)
             {

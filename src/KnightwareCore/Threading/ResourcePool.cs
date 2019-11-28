@@ -1,9 +1,8 @@
-﻿using System;
+﻿using Knightware.Threading.Tasks;
+using System;
 using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
 using System.Linq;
-using Knightware.Threading.Tasks;
+using System.Threading.Tasks;
 
 namespace Knightware.Threading
 {
@@ -272,7 +271,7 @@ namespace Knightware.Threading
             }
 
             //Check to see if we need to remove pending requests
-            if (!newConnectionsAdded 
+            if (!newConnectionsAdded
                 && requestQueue.Count == 0 && now.Subtract(lastResourceClosedCheck) > ResourceDeallocationInterval
                 && resourcePool.Count > MinimumConnections)
             {

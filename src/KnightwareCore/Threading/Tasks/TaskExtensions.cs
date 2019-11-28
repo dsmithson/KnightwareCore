@@ -1,14 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
+﻿using System.Linq;
 using System.Threading.Tasks;
 
 namespace Knightware.Threading.Tasks
 {
     public static class TaskExtensions
     {
-        public static async Task<bool> AllSuccess( params Task<bool>[] tasks)
+        public static async Task<bool> AllSuccess(params Task<bool>[] tasks)
         {
             if (tasks == null || tasks.Length == 0)
                 return false;

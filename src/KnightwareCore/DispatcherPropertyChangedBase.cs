@@ -1,12 +1,10 @@
-﻿using System;
+﻿using Knightware.Diagnostics;
+using Knightware.Threading;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Runtime.CompilerServices;
-using System.Text;
-using System.Threading.Tasks;
-using Knightware.Diagnostics;
-using Knightware.Threading;
 
 namespace Knightware
 {
@@ -15,17 +13,17 @@ namespace Knightware
     /// </summary>
     public class DispatcherPropertyChangedBase : INotifyPropertyChanged
     {
-        private readonly List<Tuple<PropertyChangedEventHandler, Dispatcher>> subscribers = new List<Tuple<PropertyChangedEventHandler,Dispatcher>>();
+        private readonly List<Tuple<PropertyChangedEventHandler, Dispatcher>> subscribers = new List<Tuple<PropertyChangedEventHandler, Dispatcher>>();
         private readonly object subscribserLock = new object();
 
         public event PropertyChangedEventHandler PropertyChanged
         {
-            add 
+            add
             {
-                lock(subscribserLock)
+                lock (subscribserLock)
                     subscribers.Add(new Tuple<PropertyChangedEventHandler, Dispatcher>(value, new Dispatcher()));
             }
-            remove 
+            remove
             {
                 lock (subscribserLock)
                 {
@@ -60,7 +58,7 @@ namespace Knightware
                         subscriber.Item1(this, args);
                     }
                 }
-                catch(Exception ex)
+                catch (Exception ex)
                 {
                     TraceQueue.Trace(this, TracingLevel.Warning, "{0} occurred while raising propertyChanged: {1}", ex.GetType().Name, ex.Message);
                 }

@@ -1,8 +1,4 @@
 ﻿using Knightware.Threading.Tasks;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Knightware.Diagnostics
@@ -14,7 +10,7 @@ namespace Knightware.Diagnostics
     {
         private const int maxMessageQueueCount = 100;
         private static readonly AsyncListProcessor<TraceMessage> messageQueue;
-        
+
         /// <summary>
         /// Event raised when a new Trace message is generated
         /// </summary>
@@ -83,7 +79,7 @@ namespace Knightware.Diagnostics
 
         private static Task ProcessQueue(AsyncListProcessorItemEventArgs<TraceMessage> args)
         {
-            if(args?.Item != null)
+            if (args?.Item != null)
             {
                 TraceMessageRaised?.Invoke(args.Item);
             }

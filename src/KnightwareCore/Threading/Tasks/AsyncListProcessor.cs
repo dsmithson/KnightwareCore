@@ -1,8 +1,6 @@
 ﻿using Knightware.Diagnostics;
 using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Threading.Tasks.Dataflow;
@@ -45,7 +43,7 @@ namespace Knightware.Threading.Tasks
             IsRunning = true;
 
             this.cancellationTokenSource = new CancellationTokenSource();
-            
+
             var workerBlockOptions = new ExecutionDataflowBlockOptions()
             {
                 MaxDegreeOfParallelism = MaxDegreeOfParallelism,

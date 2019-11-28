@@ -1,9 +1,5 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Knightware.Primitives
 {
@@ -128,7 +124,7 @@ namespace Knightware.Primitives
             }
 
             byte a = 0xff;
-            if(hexString.Length - index == 8)
+            if (hexString.Length - index == 8)
             {
                 a = byte.Parse(hexString.Substring(index, 2), NumberStyles.HexNumber);
                 index += 2;

@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Knightware.Threading
 {
@@ -12,7 +9,7 @@ namespace Knightware.Threading
             public TaskCompletionSource<T> Tcs { get; } = new TaskCompletionSource<T>();
             public string SerializationKey { get; private set; }
 
-            public Task<T> Task {  get { return Tcs.Task; } }
+            public Task<T> Task { get { return Tcs.Task; } }
 
             public Request(string serializationKey = null)
             {

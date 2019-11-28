@@ -1,8 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Threading.Tasks;
 
 namespace Knightware.Net.Sockets
 {
@@ -11,7 +7,7 @@ namespace Knightware.Net.Sockets
         bool IsRunning { get; }
         string MulticastIP { get; }
         int MulticastPort { get; }
-        
+
         event DataReceivedHandler DataReceived;
 
         Task<bool> StartupAsync(string multicastIP, int multicastPort);

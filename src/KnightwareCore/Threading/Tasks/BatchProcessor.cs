@@ -2,11 +2,10 @@
 using System;
 using System.Collections.Generic;
 using System.Collections.ObjectModel;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using System.Diagnostics;
+using System.Linq;
 using System.Threading;
+using System.Threading.Tasks;
 
 namespace Knightware.Threading.Tasks
 {
@@ -68,18 +67,18 @@ namespace Knightware.Threading.Tasks
         {
             await ShutdownAsync();
 
-            if(minimumTimeInterval > maximumTimeInterval)
+            if (minimumTimeInterval > maximumTimeInterval)
                 throw new ArgumentException("Maximum time interval cannot be less than the minimum time interval");
 
-            if(minimumTimeInterval <= TimeSpan.Zero)
+            if (minimumTimeInterval <= TimeSpan.Zero)
                 throw new ArgumentException("Minimum time interval must be greater than zero");
-            
+
             this.userBatchProcessorHandler = batchHandler;
             this.MinimumTimeInterval = minimumTimeInterval;
             this.MaximumTimeInterval = maximumTimeInterval;
             this.MaximumCount = maximumCount;
             IsRunning = true;
-            
+
             batchProcessor = new AsyncListProcessor<List<InternalBatchProcessorItem>>(batchProcessor_DoWork, () => IsRunning);
             if (!await batchProcessor.StartupAsync())
             {
@@ -90,7 +89,7 @@ namespace Knightware.Threading.Tasks
 
             return true;
         }
-        
+
         /// <summary>
         /// Shutdown the current batch processor
         /// </summary>
@@ -127,14 +126,14 @@ namespace Knightware.Threading.Tasks
         /// <returns>A Task of TResponse which will be completed when the item has been processed</returns>
         public async Task<TResponse> EnqueueAsync(TRequest request, bool processImmediate = false)
         {
-            if(request == null)
+            if (request == null)
                 return default(TResponse);
 
             var newItem = new InternalBatchProcessorItem(request);
 
             using (var releaser = await queueLock.LockAsync().ConfigureAwait(false))
             {
-                if(queue == null)
+                if (queue == null)
                     queue = new List<InternalBatchProcessorItem>();
 
                 queue.Add(newItem);
@@ -156,7 +155,7 @@ namespace Knightware.Threading.Tasks
                     batchTimer = new Timer((state) =>
                     {
                         Task t = OnTimerElapsed(state);
-                    }, 
+                    },
                     null, this.MinimumTimeInterval, this.MinimumTimeInterval);
                 }
             }
@@ -234,7 +233,7 @@ namespace Knightware.Threading.Tasks
                 {
                     if (!item.Task.IsCompleted)
                     {
-                        if(this.UnprocessedItemAction == UnprocessedItemAction.ThrowException)
+                        if (this.UnprocessedItemAction == UnprocessedItemAction.ThrowException)
                             item.TaskSource.TrySetException(new TaskCanceledException("Task was not processed by batch processor handler"));
                         else
                             item.TaskSource.TrySetResult(default(TResponse));
@@ -242,7 +241,7 @@ namespace Knightware.Threading.Tasks
                 }
             }
         }
-        
+
         /// <summary>
         /// Contains a request item to be processed by a batch processor handler
         /// </summary>

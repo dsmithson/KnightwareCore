@@ -1,12 +1,10 @@
-﻿using System;
+﻿using Knightware.Diagnostics;
+using Knightware.Net.Sockets;
+using System;
 using System.Collections.Generic;
-using System.Linq;
 using System.Net;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading.Tasks;
-using Knightware.Diagnostics;
-using Knightware.Net.Sockets;
 
 namespace Knightware.Net
 {
@@ -37,7 +35,7 @@ namespace Knightware.Net
         public event DataReceivedHandler DataReceived;
         protected void OnDataReceived(DataReceivedEventArgs e)
         {
-            if(DataReceived != null)
+            if (DataReceived != null)
                 DataReceived(this, e);
         }
 
@@ -57,16 +55,16 @@ namespace Knightware.Net
                 await ShutdownAsync();
                 return false;
             }
-            
+
             messageReceiptAwaiters = new Stack<TaskCompletionSource<byte[]>>();
-            
+
             socket = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, ProtocolType.Udp);
             socket.Bind(new IPEndPoint(IPAddress.Any, 0));
             if (server.Equals(IPAddress.Broadcast))
             {
                 socket.EnableBroadcast = true;
             }
-            
+
             if (!BeginReceive())
             {
                 await ShutdownAsync();
@@ -110,7 +108,7 @@ namespace Knightware.Net
             }
             catch (Exception ex)
             {
-                if(!IsRunning)
+                if (!IsRunning)
                     TraceQueue.Trace(this, TracingLevel.Warning, "{0} ocurred while trying to begin receiving data: {1}", ex.GetType().Name, ex.Message);
 
                 return false;

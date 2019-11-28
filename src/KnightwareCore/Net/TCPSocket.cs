@@ -1,11 +1,7 @@
-﻿using Knightware.Net.Sockets;
-using Knightware.Diagnostics;
+﻿using Knightware.Diagnostics;
+using Knightware.Net.Sockets;
 using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 using System.Net.Sockets;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -86,7 +82,7 @@ namespace Knightware.Net
                 stream = client.GetStream();
                 return true;
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 TraceQueue.Trace(this, TracingLevel.Warning, "{0} occurred while starting up socket: {1}", ex.GetType().Name, ex.Message);
                 await ShutdownAsync();
@@ -98,13 +94,13 @@ namespace Knightware.Net
         {
             IsRunning = false;
 
-            if(client != null)
+            if (client != null)
             {
                 client.Dispose();
                 client = null;
             }
 
-            if(stream != null)
+            if (stream != null)
             {
                 stream.Dispose();
                 stream = null;

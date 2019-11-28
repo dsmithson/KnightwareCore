@@ -1,8 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace Knightware.Primitives
 {
@@ -50,7 +46,7 @@ namespace Knightware.Primitives
                     return false;
             }
         }
-        
+
         public Rectangle(int x, int y, int width, int height) : this()
         {
             this.X = x;
@@ -101,7 +97,7 @@ namespace Knightware.Primitives
             else
                 return false;
         }
-        
+
         public static Rectangle Offset(Rectangle rect, Point offset)
         {
             Rectangle response = new Rectangle(rect);

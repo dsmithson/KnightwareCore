@@ -1,7 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -27,10 +24,10 @@ namespace Knightware.Threading.Tasks
             }
             else
             {
-                return wait.ContinueWith((_, state) => new Releaser((AsyncLock)state), 
-                    this, 
-                    CancellationToken.None, 
-                    TaskContinuationOptions.ExecuteSynchronously, 
+                return wait.ContinueWith((_, state) => new Releaser((AsyncLock)state),
+                    this,
+                    CancellationToken.None,
+                    TaskContinuationOptions.ExecuteSynchronously,
                     TaskScheduler.Default);
             }
         }

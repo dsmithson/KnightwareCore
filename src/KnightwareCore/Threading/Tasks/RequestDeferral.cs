@@ -1,7 +1,5 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Knightware.Threading.Tasks
@@ -25,10 +23,10 @@ namespace Knightware.Threading.Tasks
 
         public static async Task WaitForAllCompletedAsync(IEnumerable<RequestDeferral> requests)
         {
-            if(requests != null)
+            if (requests != null)
             {
                 var tasks = requests.Select(r => r.tcs.Task).ToList();
-                if(tasks.Count > 0)
+                if (tasks.Count > 0)
                 {
                     await Task.WhenAll(tasks);
                 }
