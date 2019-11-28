@@ -97,8 +97,14 @@ namespace Knightware
         private WeakReference<T> weakReference;
         private T strongReference;
 
+        /// <summary>
+        /// Amount of time to preserve a strong reference to the wrapped object, before allowing it to be reclaimed by GC
+        /// </summary>
         public TimeSpan CacheDuration { get; set; }
 
+        /// <summary>
+        /// Determines if this WeakReference wrapper currently has a live reference to it's wrapped object
+        /// </summary>
         public bool StrongReferenceAvailable
         {
             get { return strongReference != null; }
