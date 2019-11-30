@@ -9,11 +9,11 @@
     <projectUrl>https://github.com/dsmithson/KnightwareCore</projectUrl>
     <requireLicenseAcceptance>false</requireLicenseAcceptance>
     <description>Net Standard library providing helpful classes for threading, networking, and other primitives not available in Net Standard.</description>
-    <releaseNotes>Misc fixes and improvements.</releaseNotes>
+    <releaseNotes>Updated System.Threading.Dataflow dependency to 4.10.0 (from 4.9.0)</releaseNotes>
     <copyright>Copyright 2019</copyright>
     <tags>knightware</tags>
     <dependencies>
-	  <dependency id="System.Threading.Dataflow" version="4.9.0" />
+	  <dependency id="System.Threading.Dataflow" version="4.10.0" />
     </dependencies>
   </metadata>
 </package>

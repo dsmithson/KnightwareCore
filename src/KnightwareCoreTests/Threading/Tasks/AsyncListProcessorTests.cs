@@ -1,8 +1,6 @@
 ﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
-using System;
 using System.Collections.Generic;
 using System.Linq;
-using System.Text;
 using System.Threading.Tasks;
 
 namespace Knightware.Threading.Tasks
@@ -40,7 +38,7 @@ namespace Knightware.Threading.Tasks
 
         public class AsyncListTestObject
         {
-            private TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
+            private readonly TaskCompletionSource<bool> tcs = new TaskCompletionSource<bool>();
 
             public Task<bool> Task { get { return tcs.Task; } }
 
