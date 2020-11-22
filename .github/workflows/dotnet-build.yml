@@ -24,11 +24,3 @@ jobs:
       working-directory: ./src/
     - name: Test
       run: dotnet test src --no-restore --verbosity normal
-    - name: SonarQube Scan
-      uses: kitabisa/sonarqube-action@master
-      with:
-        host: ${{ secrets.SONARQUBE_HOST }}
-        login: ${{ secrets.SONARQUBE_TOKEN }}
-        projectBaseDir: $GITHUB_WORKSPACE/src
-        projectKey: "dsmithson_KnightwareCore"
-        projectName: "KnightwareCore"
