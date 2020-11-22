@@ -3,8 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using System.Text;
-using System.Threading;
 using System.Threading.Tasks;
 
 namespace Knightware.Threading.Tasks
@@ -13,7 +11,7 @@ namespace Knightware.Threading.Tasks
     public class BatchProcessorTests
     {
         private BatchProcessor<object, object> processor;
-        
+
         public Task TestSimpleSetup(Func<object, object> itemHandler = null, Action onBatchProcessed = null, int minimumTimeIntervalMs = 1000, long maximumTimeIntervalMs = -1, int maximumCount = -1, UnprocessedItemAction unprocessedItemAction = UnprocessedItemAction.ReturnDefaultValue)
         {
             if (itemHandler == null)
@@ -41,9 +39,9 @@ namespace Knightware.Threading.Tasks
             processor = new BatchProcessor<object, object>();
             processor.UnprocessedItemAction = unprocessedItemAction;
             if (!await processor.StartupAsync(
-                batchHandler, 
-                TimeSpan.FromMilliseconds(minimumTimeIntervalMs), 
-                (maximumTimeIntervalMs == -1 ? TimeSpan.MaxValue : TimeSpan.FromMilliseconds(maximumTimeIntervalMs)), 
+                batchHandler,
+                TimeSpan.FromMilliseconds(minimumTimeIntervalMs),
+                (maximumTimeIntervalMs == -1 ? TimeSpan.MaxValue : TimeSpan.FromMilliseconds(maximumTimeIntervalMs)),
                 maximumCount))
             {
                 Assert.Inconclusive("Failed to startup batch processor");
@@ -189,9 +187,9 @@ namespace Knightware.Threading.Tasks
             var results = await RunContinuousTestAsync(TimeSpan.FromSeconds(10), 10, 5000, 5000, maxItemsPerBatch);
             Assert.IsTrue(results.Count > 1, "Expected more items");
 
-            for(int i=0 ; i<results.Count; i++)
+            for (int i = 0; i < results.Count; i++)
             {
-                if(i == (results.Count - 1))
+                if (i == (results.Count - 1))
                     Assert.IsTrue(results[i].Item2 <= maxItemsPerBatch, "Invalid number of items in last batch");
                 else
                     Assert.AreEqual(maxItemsPerBatch, results[i].Item2, "Incorrect number of items in batch");
@@ -235,7 +233,7 @@ namespace Knightware.Threading.Tasks
                 maximumCount: int.MaxValue);
 
             //Run our test duration, adding items as needed
-            for(int i=0; i<expectedBatches; i++)
+            for (int i = 0; i < expectedBatches; i++)
             {
                 //We'll add a couple items, then wait for our min refresh time to elapse
                 for (int j = 0; j < expectedItemsPerBatch; j++)
@@ -244,14 +242,14 @@ namespace Knightware.Threading.Tasks
                 }
                 await Task.Delay(minMs * 2);
             }
-            
+
             //Wait for last batch to finish...
             await Task.Delay(1000);
-            
+
             //Verify we processed the correct number of batches
             Assert.AreEqual(expectedBatches, batchesSizesProcessed.Count, "Incorrect number of batches processed");
 
-            foreach(int batchSize in batchesSizesProcessed)
+            foreach (int batchSize in batchesSizesProcessed)
                 Assert.AreEqual(expectedItemsPerBatch, batchSize, "Incorrect batch size processed");
         }
 

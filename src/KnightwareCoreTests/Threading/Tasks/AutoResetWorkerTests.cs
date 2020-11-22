@@ -1,9 +1,5 @@
-﻿using System;
-using System.Text;
-using System.Collections.Generic;
+﻿using Microsoft.VisualStudio.TestTools.UnitTesting;
 using System.Threading.Tasks;
-using System.Threading;
-using Microsoft.VisualStudio.TestTools.UnitTesting;
 
 namespace Knightware.Threading.Tasks
 {
@@ -17,7 +13,7 @@ namespace Knightware.Threading.Tasks
         {
             counter = 0;
         }
-        
+
         [TestMethod]
         public async Task WorkerStartupShutdown()
         {
