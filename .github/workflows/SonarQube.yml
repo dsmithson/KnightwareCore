@@ -19,4 +19,4 @@ jobs:
         login: ${{ secrets.SONARQUBE_TOKEN }}
         projectBaseDir: src
         projectKey: "dsmithson_KnightwareCore"
-        args: "/o:dsmithson-github"
+        args: "-o dsmithson-github"
