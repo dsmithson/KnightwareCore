@@ -17,7 +17,6 @@ jobs:
       with:
         host: ${{ secrets.SONARQUBE_HOST }}
         login: ${{ secrets.SONARQUBE_TOKEN }}
-        projectBaseDir: src
         args: >
           -Dsonar.organization=dsmithson-github
           -Dsonar.projectKey=dsmithson_KnightwareCore
