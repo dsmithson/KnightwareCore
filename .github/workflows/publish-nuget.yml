@@ -1,0 +1,28 @@
+name: Publish Nuget
+
+on:
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+
+    steps:
+    - uses: actions/checkout@v2
+    - name: Setup .NET Core
+      uses: actions/setup-dotnet@v1
+      with:
+        dotnet-version: 3.1
+    - name: Install dependencies
+      run: dotnet restore
+      working-directory: ./src/
+    - name: Build
+      run: dotnet build --configuration Release --no-restore
+      working-directory: ./src/
+    - name: Publish KnightwareCore
+      uses: brandedoutcast/publish-nuget@v2.5.5
+      with:
+        PROJECT_FILE_PATH: src/KnightwareCore/KnightwareCore.csproj
+        NUGET_KEY: ${{secrets.NUGET_API_KEY}}
