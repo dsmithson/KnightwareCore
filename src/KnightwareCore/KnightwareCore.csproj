@@ -4,12 +4,12 @@
     <Platforms>AnyCPU;x86;x64</Platforms>
     <Authors>Derek Smithson</Authors>
     <Company>Knightware</Company>
-    <Product />
+    <Version>3.1.1</Version>
     <Description>Net Standard library providing helpful classes for threading, networking, and other primitives not available in Net Standard.</Description>
-    <Copyright>Copyright 2019</Copyright>
+    <Copyright>Copyright 2020</Copyright>
     <PackageProjectUrl>https://github.com/dsmithson/KnightwareCore</PackageProjectUrl>
     <PackageTags>knightware</PackageTags>
-    <PackageLicenseExpression>Apache-2.0</PackageLicenseExpression>
+    <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <RepositoryUrl>https://github.com/dsmithson/KnightwareCore</RepositoryUrl>
     <RepositoryType>git</RepositoryType>
   </PropertyGroup>
@@ -17,6 +17,6 @@
     <Folder Include="Properties\" />
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="4.9.0" />
+    <PackageReference Include="System.Threading.Tasks.Dataflow" Version="5.0.0" />
   </ItemGroup>
 </Project>
