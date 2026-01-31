@@ -22,7 +22,6 @@ namespace Knightware.Text
         }
 
         [TestMethod]
-        [ExpectedException(typeof(ArgumentException))]
         public void ToBytesFromInvalidStringTest()
         {
             //Ensure we start with an invalid test string
@@ -31,7 +30,7 @@ namespace Knightware.Text
                 Assert.Inconclusive("Failed to start with a known bad test string");
 
             //Expect an exception here since we have an invalid length
-            HexUtil.GetBytes(testString);
+            Assert.ThrowsExactly<ArgumentException>(() => HexUtil.GetBytes(testString));
         }
 
         [TestMethod]

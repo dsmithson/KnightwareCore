@@ -61,17 +61,26 @@ namespace Knightware.Threading
             resourcePool = new List<ResourcePoolEntry>();
 
             //Initialize the worker which will increase/decrease the pool size as necessary
+            const double minSignallingTimeMs = 100;
             resourcePoolMonitor = new AutoResetWorker()
             {
-                PeriodicSignallingTime = TimeSpan.FromSeconds(1) //May need to re-evaluate this interval
+                PeriodicSignallingTime = TimeSpan.FromMilliseconds(
+                    Math.Max(minSignallingTimeMs, 
+                    Math.Min(ResourceAllocationInterval.TotalMilliseconds, ResourceDeallocationInterval.TotalMilliseconds)))
             };
-            if (!await resourcePoolMonitor.StartupAsync(connectionPoolMonitor_DoWork, null, () => IsRunning))
+            if (!await resourcePoolMonitor.StartupAsync(connectionPoolMonitor_DoWork, null, () => IsRunning).ConfigureAwait(false))
             {
-                await ShutdownAsync();
+                await ShutdownAsync().ConfigureAwait(false);
                 return false;
             }
             resourcePoolInitializing = true;
             resourcePoolMonitor.Set();
+
+            //Wait for initial connections to be created
+            while (resourcePoolInitializing && IsRunning)
+            {
+                await Task.Delay(10).ConfigureAwait(false);
+            }
 
             return true;
         }
@@ -85,36 +94,55 @@ namespace Knightware.Threading
 
             if (resourcePoolMonitor != null)
             {
-                await resourcePoolMonitor.ShutdownAsync();
+                await resourcePoolMonitor.ShutdownAsync().ConfigureAwait(false);
                 resourcePoolMonitor = null;
             }
 
+            // Cancel any pending requests that never got a resource
+            if (requestQueue != null)
+            {
+                using (var requestLock = await requestQueueLock.LockAsync().ConfigureAwait(false))
+                {
+                    foreach (var request in requestQueue)
+                    {
+                        request.Tcs.TrySetResult(default(T));
+                    }
+                    requestQueue.Clear();
+                }
+            }
+
             //Close any lingering pool connections   
-            DateTime timeoutTime = maxWait >= 0 ? DateTime.MaxValue : DateTime.Now.AddMilliseconds(maxWait);
-            while (resourcePool.Count > 0)
+            DateTime timeoutTime = maxWait >= 0 ? DateTime.Now.AddMilliseconds(maxWait) : DateTime.MaxValue;
+            while (resourcePool?.Count > 0)
             {
                 var shutdownTasks = new List<Task>();
-                bool timeoutExpired = DateTime.Now < timeoutTime;
-                int index = 0;
-                while (index < resourcePool.Count)
+                bool timeoutExpired = DateTime.Now > timeoutTime;
+                
+                using (var poolLock = await resourcePoolLock.LockAsync().ConfigureAwait(false))
                 {
-                    var resource = resourcePool[index];
-                    if (resource.InUse && !timeoutExpired)
+                    int index = 0;
+                    while (index < resourcePool.Count)
                     {
-                        //Give in-use resources time to finish their work before we close their connection
-                        index++;
-                    }
-                    else
-                    {
-                        resourcePool.RemoveAt(index);
-                        shutdownTasks.Add(closeResourceHandler(resource.Connection));
+                        var resource = resourcePool[index];
+                        if (resource.InUse && !timeoutExpired)
+                        {
+                            //Give in-use resources time to finish their work before we close their connection
+                            index++;
+                        }
+                        else
+                        {
+                            resourcePool.RemoveAt(index);
+                            shutdownTasks.Add(closeResourceHandler(resource.Connection));
+                        }
                     }
                 }
 
                 if (shutdownTasks.Count > 0)
-                    await Task.WhenAll(shutdownTasks.ToArray());
-                else
-                    await Task.Delay(10);
+                    await Task.WhenAll(shutdownTasks).ConfigureAwait(false);
+                
+                // If no tasks were removed, release lock and wait for Release calls to complete
+                if (resourcePool?.Count > 0)
+                    await Task.Delay(50).ConfigureAwait(false);
             }
 
             createResourceHandler = null;
@@ -135,12 +163,12 @@ namespace Knightware.Threading
 
             //Enqueue the pending request and trigger the connection pool worker to get it scheduled
             var request = new Request(serializationKey);
-            using (var lockObject = await requestQueueLock.LockAsync())
+            using (var lockObject = await requestQueueLock.LockAsync().ConfigureAwait(false))
             {
                 requestQueue.Add(request);
             }
             resourcePoolMonitor.Set();
-            return await request.Task;
+            return await request.Task.ConfigureAwait(false);
         }
 
         /// <summary>
@@ -152,9 +180,9 @@ namespace Knightware.Threading
         public async Task<bool> Release(T acquiredConnection, bool resourceShouldBeShutdown = false)
         {
             //Release the connection to the pool and trigger the pool to re-evaluate pending connection requests
-            using (var lockObject = await resourcePoolLock.LockAsync())
+            using (var lockObject = await resourcePoolLock.LockAsync().ConfigureAwait(false))
             {
-                ResourcePoolEntry entry = resourcePool.FirstOrDefault(c => object.Equals(c.Connection, acquiredConnection));
+                ResourcePoolEntry entry = resourcePool?.FirstOrDefault(c => object.Equals(c.Connection, acquiredConnection));
                 if (entry != null)
                 {
                     if (resourceShouldBeShutdown)
@@ -167,7 +195,7 @@ namespace Knightware.Threading
                         //Return back to pool
                         await entry.ReleaseAsync();
                     }
-                    resourcePoolMonitor.Set();
+                    resourcePoolMonitor?.Set();
                     return true;
                 }
                 return false;
@@ -186,21 +214,32 @@ namespace Knightware.Threading
             }, serializationKey);
         }
 
+        public Task<TResponse> RunOnThreadPool<TResponse>(Func<T, Task<TResponse>> actionToRun, string serializationKey = null)
+        {
+            return Task.Run(() => Run(actionToRun, serializationKey));
+        }
+
         /// <summary>
         /// Acquires a resource from the pool and passes it to a specified function to be run
         /// </summary>
         public async Task<TResponse> Run<TResponse>(Func<T, Task<TResponse>> actionToRun, string serializationKey = null)
         {
-            var resource = await Acquire(serializationKey);
-            TResponse result = default(TResponse);
+            var resource = await Acquire(serializationKey).ConfigureAwait(false);
+            
+            // If pool is shutting down, Acquire returns default(T) - don't run the action
+            if (!IsRunning)
+                return default;
+                
+            TResponse result;
             try
             {
-                result = await actionToRun(resource);
-                await Release(resource, false);
+                result = await actionToRun(resource).ConfigureAwait(false);
+
+                await Release(resource, false).ConfigureAwait(false);
             }
             catch
             {
-                await Release(resource, true);
+                await Release(resource, true).ConfigureAwait(false);
                 throw;
             }
 
@@ -208,26 +247,43 @@ namespace Knightware.Threading
         }
 
 
+
+
+
         private DateTime lastResourceCreationCheck;
         private DateTime lastResourceClosedCheck;
         private async Task connectionPoolMonitor_DoWork(object state)
         {
             DateTime now = DateTime.Now;
+            bool timeIntervalPassed = now.Subtract(lastResourceCreationCheck) > ResourceAllocationInterval;
 
-            //Create a new connection if needed
-            bool newConnectionsAdded = false;
-            if (resourcePoolInitializing || (requestQueue.Count > 0 && resourcePool.Count < MaximumConnections && now.Subtract(lastResourceCreationCheck) > ResourceAllocationInterval))
+            // Determine if we need to create resources
+            int requestCount;
+            int poolCount;
+            int availableCount;
+            
+            using (var requestLock = await requestQueueLock.LockAsync())
+            using (var poolLock = await resourcePoolLock.LockAsync())
             {
-                newConnectionsAdded = true;
+                requestCount = requestQueue.Count;
+                poolCount = resourcePool.Count;
+                availableCount = resourcePool.Count(c => !c.InUse);
+            }
+
+            bool needsMoreResources = requestCount > availableCount && poolCount < MaximumConnections;
+            // Immediately create a resource if there are waiting requests and no available resources
+            bool urgentNeed = requestCount > 0 && availableCount == 0 && poolCount < MaximumConnections;
+            bool shouldCreateResource = resourcePoolInitializing || urgentNeed || (needsMoreResources && timeIntervalPassed);
+
+            // Create resource outside the lock
+            if (shouldCreateResource)
+            {
                 T connection = await createResourceHandler();
 
-                //If we don't have a connection, we'll retry automatically when our auto-elapsed timer expires or someone needs a connection
-                if (connection != null)
+                using (var poolLock = await resourcePoolLock.LockAsync())
                 {
-                    //Create a new connection pool state object to the pool
                     resourcePool.Add(new ResourcePoolEntry(connection));
 
-                    //If we're not done initializing the pool, trigger this worker to run again immediately
                     if (resourcePoolInitializing)
                     {
                         if (resourcePool.Count >= InitialConnections)
@@ -252,7 +308,6 @@ namespace Knightware.Threading
                     var request = requestQueue[index];
 
                     //Check to see if there is something already running with this serialization key
-                    //in which case we can't yet process this request
                     if (!string.IsNullOrEmpty(request.SerializationKey) &&
                         resourcePool.Any(c => c.SerializationKey == request.SerializationKey))
                     {
@@ -264,18 +319,22 @@ namespace Knightware.Threading
                     var availableConnection = availableConnections[0];
                     availableConnections.RemoveAt(0);
 
-                    //Assign the connection to a request
+                    //Remove the request from the queue and assign the connection
+                    requestQueue.RemoveAt(index);
                     availableConnection.Acquire(request.SerializationKey);
                     request.Tcs.TrySetResult(availableConnection.Connection);
                 }
-            }
 
-            //Check to see if we need to remove pending requests
-            if (!newConnectionsAdded
-                && requestQueue.Count == 0 && now.Subtract(lastResourceClosedCheck) > ResourceDeallocationInterval
-                && resourcePool.Count > MinimumConnections)
-            {
-                using (var poolLock = await resourcePoolLock.LockAsync())
+                //If there are still pending requests that couldn't be allocated, trigger another iteration
+                if (requestQueue.Count > 0 && resourcePool.Count < MaximumConnections)
+                {
+                    resourcePoolMonitor.Set();
+                }
+
+                //Check to see if we need to remove stale resources (but not during initialization)
+                if (!resourcePoolInitializing && requestQueue.Count == 0 
+                    && now.Subtract(lastResourceClosedCheck) > ResourceDeallocationInterval
+                    && resourcePool.Count > MinimumConnections)
                 {
                     var staleConnection = resourcePool
                         .Where(c => !c.InUse && now.Subtract(c.LastUseTime) > ResourceDeallocationInterval)

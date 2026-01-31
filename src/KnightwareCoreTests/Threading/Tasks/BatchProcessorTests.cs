@@ -137,7 +137,7 @@ namespace Knightware.Threading.Tasks
             }
 
             //Verify we waited the maximum amount of time before the first batch was processed
-            Assert.IsTrue(stopwatch.Elapsed.TotalMilliseconds > maximumTimeoutMs, "Not enough time passed {0} before patch was processed", stopwatch.Elapsed);
+            Assert.IsGreaterThan(maximumTimeoutMs, stopwatch.Elapsed.TotalMilliseconds, $"Not enough time passed {stopwatch.Elapsed} before patch was processed");
             Console.WriteLine("Items were processed in {0} - timeout was configured for {1} milliseconds", stopwatch.Elapsed, maximumTimeoutMs);
         }
 
@@ -274,7 +274,7 @@ namespace Knightware.Threading.Tasks
             stopWatch.Stop();
 
             Assert.AreEqual(2, batchSize, "Unexpected batch size processed");
-            Assert.IsTrue(stopWatch.Elapsed < processor.MinimumTimeInterval, "Immediate item didn't appear to be processed immediately.  Processed in {0}ms", stopWatch.Elapsed.TotalMilliseconds);
+            Assert.IsTrue(stopWatch.Elapsed < processor.MinimumTimeInterval, $"Immediate item didn't appear to be processed immediately.  Processed in {stopWatch.Elapsed.TotalMilliseconds}ms");
         }
 
         /// <summary>
@@ -314,7 +314,6 @@ namespace Knightware.Threading.Tasks
         }
 
         [TestMethod]
-        [ExpectedException(typeof(TaskCanceledException))]
         public async Task UnprocessedItemExceptionTest()
         {
             //Set our unprocessed item action to throw exception, add an item to the queue and in our worker don't process it.  Verify an
@@ -325,7 +324,7 @@ namespace Knightware.Threading.Tasks
                 unprocessedItemAction: UnprocessedItemAction.ThrowException);
 
             //Add an item, and then ensure the response took at least the timeout time
-            object result = await processor.EnqueueAsync(5);
+            await Assert.ThrowsExactlyAsync<TaskCanceledException>(async () => await processor.EnqueueAsync(5));
         }
 
         [TestMethod]
