@@ -1,27 +1,41 @@
-name: .NET Core
+name: CI
 
 on:
-  push:
   pull_request:
+    branches: [ main ]
+  push:
     branches: [ main ]
 
 jobs:
-  build:
-
+  build-and-test:
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v2
-    - name: Setup .NET Core
-      uses: actions/setup-dotnet@v1
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v4
       with:
-        dotnet-version: 10.0
-    - name: Install dependencies
+        dotnet-version: 10.0.x
+
+    - name: Restore dependencies
       run: dotnet restore
       working-directory: ./src/
+
     - name: Build
       run: dotnet build --configuration Release --no-restore
       working-directory: ./src/
-    - name: Test
-      run: dotnet test src --no-restore --verbosity normal
+
+    - name: Run tests
+      run: dotnet test --configuration Release --no-build --verbosity normal --logger trx --results-directory "TestResults"
+      working-directory: ./src/
+
+    - name: Upload test results
+      uses: actions/upload-artifact@v4
+      if: always()
+      with:
+        name: test-results
+        path: src/TestResults
+        retention-days: 5
 
