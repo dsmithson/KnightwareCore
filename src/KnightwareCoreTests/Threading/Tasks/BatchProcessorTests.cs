@@ -228,18 +228,19 @@ namespace Knightware.Threading.Tasks
                 maximumCount: int.MaxValue);
 
             //Run our test duration, adding items as needed
+            List<Task> tasks = new(); 
             for(int i=0; i<expectedBatches; i++)
             {
                 //We'll add a couple items, then wait for our min refresh time to elapse
                 for (int j = 0; j < expectedItemsPerBatch; j++)
                 {
-                    Task t1 = processor.EnqueueAsync(0);
+                    tasks.Add(processor.EnqueueAsync(0));
                 }
                 await Task.Delay(minMs * 2);
             }
-            
+
             //Wait for last batch to finish...
-            await Task.Delay(1000);
+            await Task.WhenAll(tasks);
             
             //Verify we processed the correct number of batches
             Assert.HasCount(expectedBatches, batchesSizesProcessed, "Incorrect number of batches processed");

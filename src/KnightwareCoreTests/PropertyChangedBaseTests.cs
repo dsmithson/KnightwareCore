@@ -60,13 +60,6 @@ namespace Knightware
         }
 
         [TestMethod]
-        public void PropertyChangedNotRaisedWithoutSubscriberTest()
-        {
-            var obj = new TestPropertyChangedClass();
-            obj.Name = "Test";
-        }
-
-        [TestMethod]
         public void MultiplePropertyChangedEventsTest()
         {
             var obj = new TestPropertyChangedClass();

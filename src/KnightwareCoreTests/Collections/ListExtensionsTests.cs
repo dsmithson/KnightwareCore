@@ -83,7 +83,7 @@ namespace Knightware.Collections
                 (s, d) => d.Name = s.Name,
                 removed => removedItem = removed);
 
-            Assert.AreEqual(1, destination.Count);
+            Assert.HasCount(1, destination);
             Assert.IsNotNull(removedItem);
             Assert.AreEqual(2, removedItem.Id);
         }
@@ -105,7 +105,6 @@ namespace Knightware.Collections
         public void CopyToWithNullDestinationDoesNotThrowTest()
         {
             var source = new List<SourceItem> { new SourceItem { Id = 1 } };
-
             source.CopyTo<SourceItem, DestItem, int>(
                 null,
                 s => s.Id,
