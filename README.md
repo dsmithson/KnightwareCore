@@ -3,7 +3,6 @@
 A .NET Standard 2.0 library providing helpful utility classes for threading, networking, collections, and other common patterns frequently used across projects.
 
 [![CI](https://github.com/dsmithson/KnightwareCore/actions/workflows/ci.yml/badge.svg)](https://github.com/dsmithson/KnightwareCore/actions/workflows/ci.yml)
-[![Quality Gate Status](https://sonarcloud.io/api/project_badges/measure?project=dsmithson_KnightwareCore&metric=alert_status)](https://sonarcloud.io/dashboard?id=dsmithson_KnightwareCore)
 [![codecov](https://codecov.io/gh/dsmithson/KnightwareCore/branch/main/graph/badge.svg)](https://codecov.io/gh/dsmithson/KnightwareCore)
 [![NuGet](https://img.shields.io/nuget/v/KnightwareCore.svg)](https://www.nuget.org/packages/KnightwareCore/)
 

@@ -210,6 +210,7 @@ namespace Knightware.Threading.Tasks
 
             var batchesSizesProcessed = new List<int>();
             int itemsProcessedInCurrentBatch = 0;
+            var batchCompleteSignal = new TaskCompletionSource<bool>();
 
             //Setup a handler that will increment our batch process count per item and add the batch count and a timestamp when a batch completes
             await TestSimpleSetup(
@@ -222,25 +223,30 @@ namespace Knightware.Threading.Tasks
                 {
                     batchesSizesProcessed.Add(itemsProcessedInCurrentBatch);
                     itemsProcessedInCurrentBatch = 0;
+                    batchCompleteSignal.TrySetResult(true);
                 },
                 minimumTimeIntervalMs: minMs,
                 maximumTimeIntervalMs: 10000,
                 maximumCount: int.MaxValue);
 
             //Run our test duration, adding items as needed
-            List<Task> tasks = new(); 
             for(int i=0; i<expectedBatches; i++)
             {
-                //We'll add a couple items, then wait for our min refresh time to elapse
+                //Reset signal for this batch
+                batchCompleteSignal = new TaskCompletionSource<bool>();
+
+                //Add item(s) for this batch
+                List<Task> batchTasks = new();
                 for (int j = 0; j < expectedItemsPerBatch; j++)
                 {
-                    tasks.Add(processor.EnqueueAsync(0));
+                    batchTasks.Add(processor.EnqueueAsync(0));
                 }
-                await Task.Delay(minMs * 2);
-            }
 
-            //Wait for last batch to finish...
-            await Task.WhenAll(tasks);
+                //Wait for the batch to fully complete (including onBatchProcessed callback)
+                //Task.WhenAll only waits for SetResponse, but we need to wait for the callback too
+                await Task.WhenAll(batchTasks);
+                await batchCompleteSignal.Task;
+            }
             
             //Verify we processed the correct number of batches
             Assert.HasCount(expectedBatches, batchesSizesProcessed, "Incorrect number of batches processed");
