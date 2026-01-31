@@ -15,11 +15,10 @@ namespace Knightware.Core
         public event XmlReadFailedHandler ElementReadFailed;
         protected void OnElementReadFailed(string elementName)
         {
-            if (ElementReadFailed != null)
-                ElementReadFailed(this, elementName);
+            ElementReadFailed?.Invoke(this, elementName);
         }
 
-        public XDocument GetXDocument(Stream xmlFileStream, bool skipXmlDeclaration = true)
+        public static XDocument GetXDocument(Stream xmlFileStream, bool skipXmlDeclaration = true)
         {
             if (skipXmlDeclaration)
             {
@@ -45,8 +44,7 @@ namespace Knightware.Core
         {
             return Read(parent, elementName, defaultValue, (value) =>
                 {
-                    int response;
-                    return int.TryParse(value, out response) ? response : ReturnDefaultValue(elementName, defaultValue);
+                    return int.TryParse(value, out int response) ? response : ReturnDefaultValue(elementName, defaultValue);
                 });
         }
 
@@ -54,8 +52,7 @@ namespace Knightware.Core
         {
             return Read(parent, elementName, defaultValue, (value) =>
             {
-                float response;
-                return float.TryParse(value, out response) ? response : ReturnDefaultValue(elementName, defaultValue);
+                return float.TryParse(value, out float response) ? response : ReturnDefaultValue(elementName, defaultValue);
             });
         }
 
@@ -106,7 +103,7 @@ namespace Knightware.Core
             return ReturnDefaultValue(elementName, defaultValue);
         }
 
-        public XElement ReadElement(XElement parent, string elementName)
+        public static XElement ReadElement(XElement parent, string elementName)
         {
             if (parent == null)
                 return null;

@@ -11,12 +11,13 @@ namespace Knightware.Threading.Tasks
     /// Manages a collection of items which can be added to in a thread-safe mannor, and will be processed sequentially
     /// </summary>
     /// <typeparam name="T"></typeparam>
-    public class AsyncListProcessor<T>
+    public class AsyncListProcessor<T> : IDisposable
     {
         private ActionBlock<T> workerBlock;
         private CancellationTokenSource cancellationTokenSource;
         private readonly Func<AsyncListProcessorItemEventArgs<T>, Task> processItem;
         private readonly Func<bool> checkForContinueMethod;
+        private bool disposed;
 
         public bool IsRunning { get; private set; }
 
@@ -91,6 +92,7 @@ namespace Knightware.Threading.Tasks
                     await workerBlock.Completion;
 
                     workerBlock = null;
+                    cancellationTokenSource?.Dispose();
                     cancellationTokenSource = null;
                 }
                 return true;
@@ -98,6 +100,7 @@ namespace Knightware.Threading.Tasks
             catch (TaskCanceledException)
             {
                 workerBlock = null;
+                cancellationTokenSource?.Dispose();
                 cancellationTokenSource = null;
                 return true;
             }
@@ -122,6 +125,19 @@ namespace Knightware.Threading.Tasks
             {
                 foreach (T newItem in newItems)
                     Add(newItem);
+            }
+        }
+
+        public void Dispose()
+        {
+            if (!disposed)
+            {
+                disposed = true;
+                IsRunning = false;
+                cancellationTokenSource?.Cancel();
+                cancellationTokenSource?.Dispose();
+                cancellationTokenSource = null;
+                workerBlock = null;
             }
         }
     }

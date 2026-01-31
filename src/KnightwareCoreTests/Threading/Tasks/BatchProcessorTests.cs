@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 
 namespace Knightware.Threading.Tasks
 {
+    [DoNotParallelize]
     [TestClass]
     public class BatchProcessorTests
     {
@@ -50,13 +51,13 @@ namespace Knightware.Threading.Tasks
             }
         }
 
-        [TestMethod]
-        public void TestCleanup()
+        [TestCleanup]
+        public async Task TestCleanup()
         {
             //Generic cleanup
             if (processor != null)
             {
-                processor.ShutdownAsync().Wait();
+                await processor.ShutdownAsync().ConfigureAwait(false);
                 processor = null;
             }
         }
@@ -196,14 +197,6 @@ namespace Knightware.Threading.Tasks
                 else
                     Assert.AreEqual(maxItemsPerBatch, results[i].Item2, "Incorrect number of items in batch");
             }
-        }
-
-        [TestMethod]
-        public void MaximumElapsedMultipleTest()
-        {
-            //Runs through multiple iterations of a maximum elapsed timeout test on a single instance of the item processor to ensure it works correctly
-            //when hitting the max timeout limit multiple times
-
         }
 
         [TestMethod]
