@@ -56,42 +56,52 @@ namespace Knightware.Collections
         {
             if (e.Action == NotifyCollectionChangedAction.Reset)
             {
-                //De-register all items
-                while (registeredNotifyingCollections.Count > 0)
-                {
-                    registeredNotifyingCollections[0].CollectionChanged -= observable_CollectionChanged;
-                    registeredNotifyingCollections.RemoveAt(0);
-                }
+                UnregisterAllCollections();
             }
 
-            if (e.OldItems != null && e.OldItems.Count > 0)
-            {
-                foreach (IList collection in e.OldItems)
-                {
-                    var observable = collection as INotifyCollectionChanged;
-                    if (observable != null)
-                    {
-                        observable.CollectionChanged -= observable_CollectionChanged;
-                        if (registeredNotifyingCollections.Contains(observable))
-                            registeredNotifyingCollections.Remove(observable);
-                    }
-                }
-            }
-
-            if (e.NewItems != null && e.NewItems.Count > 0)
-            {
-                foreach (IList collection in e.NewItems)
-                {
-                    var observable = collection as INotifyCollectionChanged;
-                    if (observable != null)
-                    {
-                        observable.CollectionChanged += observable_CollectionChanged;
-                        registeredNotifyingCollections.Add(observable);
-                    }
-                }
-            }
+            UnregisterRemovedCollections(e.OldItems);
+            RegisterNewCollections(e.NewItems);
 
             OnCollectionChanged(new NotifyCollectionChangedEventArgs(NotifyCollectionChangedAction.Reset));
+        }
+
+        private void UnregisterAllCollections()
+        {
+            foreach (var notifyingCollection in registeredNotifyingCollections)
+            {
+                notifyingCollection.CollectionChanged -= observable_CollectionChanged;
+            }
+            registeredNotifyingCollections.Clear();
+        }
+
+        private void UnregisterRemovedCollections(IList oldItems)
+        {
+            if (oldItems == null || oldItems.Count == 0)
+                return;
+
+            foreach (IList collection in oldItems)
+            {
+                if (collection is INotifyCollectionChanged observable)
+                {
+                    observable.CollectionChanged -= observable_CollectionChanged;
+                    registeredNotifyingCollections.Remove(observable);
+                }
+            }
+        }
+
+        private void RegisterNewCollections(IList newItems)
+        {
+            if (newItems == null || newItems.Count == 0)
+                return;
+
+            foreach (IList collection in newItems)
+            {
+                if (collection is INotifyCollectionChanged observable)
+                {
+                    observable.CollectionChanged += observable_CollectionChanged;
+                    registeredNotifyingCollections.Add(observable);
+                }
+            }
         }
 
         void observable_CollectionChanged(object sender, NotifyCollectionChangedEventArgs e)
