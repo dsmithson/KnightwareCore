@@ -186,6 +186,111 @@ namespace Knightware.Threading
             }
         }
 
+        [TestMethod]
+        public async Task SerializationKeyTest()
+        {
+            var config = new ResourcePoolConfig<ResourcePoolTestResource>()
+            {
+                InitialConnections = 2,
+                MinimumConnections = 1,
+                MaximumConnections = 2,
+                ResourceDeallocationInterval = TimeSpan.FromSeconds(10),
+                ResourceAllocationInterval = TimeSpan.FromMilliseconds(10),
+            };
+
+            await RunResourcePoolTest(config, async pool =>
+            {
+                var executionOrder = new List<int>();
+                var task1Started = new TaskCompletionSource<bool>();
+                var task1CanFinish = new TaskCompletionSource<bool>();
+
+                // Start first task with serialization key - it will hold the key
+                var task1 = pool.Run(async resource =>
+                {
+                    executionOrder.Add(1);
+                    task1Started.SetResult(true);
+                    await task1CanFinish.Task;
+                    return true;
+                }, "key1");
+
+                await task1Started.Task;
+
+                // Start second task with same key - should wait for task1
+                var task2 = pool.Run(async resource =>
+                {
+                    executionOrder.Add(2);
+                    return true;
+                }, "key1");
+
+                // Start third task with different key - should run immediately on available resource
+                var task3Started = new TaskCompletionSource<bool>();
+                var task3 = pool.Run(async resource =>
+                {
+                    executionOrder.Add(3);
+                    task3Started.SetResult(true);
+                    return true;
+                }, "key2");
+
+                // Task 3 should complete before task 1 finishes
+                await task3Started.Task;
+                Assert.IsTrue(executionOrder.Contains(3), "Task3 should have started");
+                Assert.IsFalse(executionOrder.Contains(2), "Task2 should not have started yet");
+
+                // Let task1 finish
+                task1CanFinish.SetResult(true);
+                await Task.WhenAll(task1, task2, task3);
+
+                Assert.AreEqual(1, executionOrder[0], "Task1 should be first");
+                Assert.AreEqual(3, executionOrder[1], "Task3 should be second");
+                Assert.AreEqual(2, executionOrder[2], "Task2 should be third");
+            }).ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task RunWithExceptionReleasesResourceTest()
+        {
+            var config = new ResourcePoolConfig<ResourcePoolTestResource>()
+            {
+                InitialConnections = 1,
+                MinimumConnections = 1,
+                MaximumConnections = 1,
+                ResourceDeallocationInterval = TimeSpan.FromSeconds(10),
+            };
+
+            await RunResourcePoolTest(config, async pool =>
+            {
+                // Run a task that throws
+                try
+                {
+                    await pool.Run<bool>(resource =>
+                    {
+                        throw new InvalidOperationException("Test exception");
+                    });
+                }
+                catch (InvalidOperationException)
+                {
+                    // Expected
+                }
+
+                // Resource should be released (and marked for shutdown), but pool should still work
+                // The next acquire should work (pool will create new resource if needed)
+                var result = await pool.Run(resource =>
+                {
+                    return Task.FromResult(42);
+                });
+
+                Assert.AreEqual(42, result);
+            }).ConfigureAwait(false);
+        }
+
+        [TestMethod]
+        public async Task AcquireWhenNotRunningReturnsDefaultTest()
+        {
+            var pool = new ResourcePool<int>();
+            var result = await pool.Acquire();
+            Assert.AreEqual(default(int), result);
+        }
+
         public TestContext TestContext { get; set; }
     }
 }

@@ -1,4 +1,5 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
 using System.IO.Compression;
 
 namespace Knightware.IO
@@ -13,7 +14,7 @@ namespace Knightware.IO
                 {
                     byte[] decompressedBytes = new byte[uncompressedDataLength];
                     int read = decompressor.Read(decompressedBytes, 0, uncompressedDataLength);
-                    return (read == uncompressedDataLength ? decompressedBytes : null);
+                    return (read == uncompressedDataLength ? decompressedBytes : Array.Empty<byte>());
                 }
             }
         }

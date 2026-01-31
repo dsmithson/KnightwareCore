@@ -252,103 +252,141 @@ namespace Knightware.Threading
 
         private DateTime lastResourceCreationCheck;
         private DateTime lastResourceClosedCheck;
+
         private async Task connectionPoolMonitor_DoWork(object state)
         {
             DateTime now = DateTime.Now;
-            bool timeIntervalPassed = now.Subtract(lastResourceCreationCheck) > ResourceAllocationInterval;
 
-            // Determine if we need to create resources
+            await TryCreateResourceAsync(now).ConfigureAwait(false);
+            await AllocateRequestsToAvailableResourcesAsync(now).ConfigureAwait(false);
+        }
+
+        private async Task TryCreateResourceAsync(DateTime now)
+        {
+            bool shouldCreate = await ShouldCreateResourceAsync(now).ConfigureAwait(false);
+            if (!shouldCreate)
+                return;
+
+            T connection = await createResourceHandler().ConfigureAwait(false);
+
+            using (await resourcePoolLock.LockAsync().ConfigureAwait(false))
+            {
+                resourcePool.Add(new ResourcePoolEntry(connection));
+
+                if (resourcePoolInitializing && resourcePool.Count >= InitialConnections)
+                {
+                    resourcePoolInitializing = false;
+                }
+                else if (resourcePoolInitializing)
+                {
+                    resourcePoolMonitor.Set();
+                }
+            }
+
+            lastResourceCreationCheck = DateTime.Now;
+        }
+
+        private async Task<bool> ShouldCreateResourceAsync(DateTime now)
+        {
+            if (resourcePoolInitializing)
+                return true;
+
             int requestCount;
             int poolCount;
             int availableCount;
-            
-            using (var requestLock = await requestQueueLock.LockAsync())
-            using (var poolLock = await resourcePoolLock.LockAsync())
+
+            using (await requestQueueLock.LockAsync().ConfigureAwait(false))
+            using (await resourcePoolLock.LockAsync().ConfigureAwait(false))
             {
                 requestCount = requestQueue.Count;
                 poolCount = resourcePool.Count;
                 availableCount = resourcePool.Count(c => !c.InUse);
             }
 
-            bool needsMoreResources = requestCount > availableCount && poolCount < MaximumConnections;
-            // Immediately create a resource if there are waiting requests and no available resources
-            bool urgentNeed = requestCount > 0 && availableCount == 0 && poolCount < MaximumConnections;
-            bool shouldCreateResource = resourcePoolInitializing || urgentNeed || (needsMoreResources && timeIntervalPassed);
+            if (poolCount >= MaximumConnections)
+                return false;
 
-            // Create resource outside the lock
-            if (shouldCreateResource)
+            bool urgentNeed = requestCount > 0 && availableCount == 0;
+            if (urgentNeed)
+                return true;
+
+            bool needsMoreResources = requestCount > availableCount;
+            bool timeIntervalPassed = now.Subtract(lastResourceCreationCheck) > ResourceAllocationInterval;
+            return needsMoreResources && timeIntervalPassed;
+        }
+
+        private async Task AllocateRequestsToAvailableResourcesAsync(DateTime now)
+        {
+            using (await requestQueueLock.LockAsync().ConfigureAwait(false))
+            using (await resourcePoolLock.LockAsync().ConfigureAwait(false))
             {
-                T connection = await createResourceHandler();
+                AssignResourcesToRequests();
+                TriggerMoreAllocationsIfNeeded();
+                TryDeallocateStaleResource(now);
+            }
+        }
 
-                using (var poolLock = await resourcePoolLock.LockAsync())
+        private void AssignResourcesToRequests()
+        {
+            var availableConnections = resourcePool.Where(c => !c.InUse).ToList();
+
+            int index = 0;
+            while (index < requestQueue.Count && availableConnections.Count > 0)
+            {
+                var request = requestQueue[index];
+
+                if (IsRequestBlockedBySerialization(request))
                 {
-                    resourcePool.Add(new ResourcePoolEntry(connection));
-
-                    if (resourcePoolInitializing)
-                    {
-                        if (resourcePool.Count >= InitialConnections)
-                            resourcePoolInitializing = false;
-                        else
-                            resourcePoolMonitor.Set();
-                    }
+                    index++;
+                    continue;
                 }
 
-                lastResourceCreationCheck = DateTime.Now;
+                var connection = availableConnections[0];
+                availableConnections.RemoveAt(0);
+
+                requestQueue.RemoveAt(index);
+                connection.Acquire(request.SerializationKey);
+                request.Tcs.TrySetResult(connection.Connection);
+            }
+        }
+
+        private bool IsRequestBlockedBySerialization(Request request)
+        {
+            return !string.IsNullOrEmpty(request.SerializationKey) &&
+                   resourcePool.Any(c => c.SerializationKey == request.SerializationKey);
+        }
+
+        private void TriggerMoreAllocationsIfNeeded()
+        {
+            if (requestQueue.Count > 0 && resourcePool.Count < MaximumConnections)
+            {
+                resourcePoolMonitor.Set();
+            }
+        }
+
+        private void TryDeallocateStaleResource(DateTime now)
+        {
+            if (resourcePoolInitializing || requestQueue.Count > 0)
+                return;
+
+            if (now.Subtract(lastResourceClosedCheck) <= ResourceDeallocationInterval)
+                return;
+
+            if (resourcePool.Count <= MinimumConnections)
+                return;
+
+            var staleConnection = resourcePool
+                .Where(c => !c.InUse && now.Subtract(c.LastUseTime) > ResourceDeallocationInterval)
+                .OrderBy(c => c.LastUseTime)
+                .FirstOrDefault();
+
+            if (staleConnection != null)
+            {
+                resourcePool.Remove(staleConnection);
+                Task t = closeResourceHandler(staleConnection.Connection);
             }
 
-            //Try to allocate pending requests into the connection pool
-            using (var requestLock = await requestQueueLock.LockAsync())
-            using (var poolLock = await resourcePoolLock.LockAsync())
-            {
-                var availableConnections = resourcePool.Where(c => !c.InUse).ToList();
-
-                int index = 0;
-                while (index < requestQueue.Count && availableConnections.Count > 0)
-                {
-                    var request = requestQueue[index];
-
-                    //Check to see if there is something already running with this serialization key
-                    if (!string.IsNullOrEmpty(request.SerializationKey) &&
-                        resourcePool.Any(c => c.SerializationKey == request.SerializationKey))
-                    {
-                        index++;
-                        continue;
-                    }
-
-                    //Grab the next available allocation
-                    var availableConnection = availableConnections[0];
-                    availableConnections.RemoveAt(0);
-
-                    //Remove the request from the queue and assign the connection
-                    requestQueue.RemoveAt(index);
-                    availableConnection.Acquire(request.SerializationKey);
-                    request.Tcs.TrySetResult(availableConnection.Connection);
-                }
-
-                //If there are still pending requests that couldn't be allocated, trigger another iteration
-                if (requestQueue.Count > 0 && resourcePool.Count < MaximumConnections)
-                {
-                    resourcePoolMonitor.Set();
-                }
-
-                //Check to see if we need to remove stale resources (but not during initialization)
-                if (!resourcePoolInitializing && requestQueue.Count == 0 
-                    && now.Subtract(lastResourceClosedCheck) > ResourceDeallocationInterval
-                    && resourcePool.Count > MinimumConnections)
-                {
-                    var staleConnection = resourcePool
-                        .Where(c => !c.InUse && now.Subtract(c.LastUseTime) > ResourceDeallocationInterval)
-                        .OrderBy(c => c.LastUseTime)
-                        .FirstOrDefault();
-
-                    if (staleConnection != null)
-                    {
-                        resourcePool.Remove(staleConnection);
-                        Task t = closeResourceHandler(staleConnection.Connection);
-                    }
-                    lastResourceClosedCheck = now;
-                }
-            }
+            lastResourceClosedCheck = now;
         }
     }
 }
