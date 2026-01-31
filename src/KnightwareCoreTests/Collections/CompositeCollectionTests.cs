@@ -22,7 +22,7 @@ namespace Knightware.Collections
             compositeCollection.CollectionChanged += (sender, e) => actualChangeCount++;
 
             PopulateCollection(compositeCollection, expectedChangeCount);
-            Assert.AreEqual(expectedChangeCount, compositeCollection.Collections.Count, "Collections do not appear to have been added");
+            Assert.HasCount(expectedChangeCount, compositeCollection.Collections, "Collections do not appear to have been added");
             Assert.AreEqual(expectedChangeCount, actualChangeCount, "CollectionChanged event count is incorrect");
         }
 
@@ -96,7 +96,7 @@ namespace Knightware.Collections
                 lists.Add(list);
 
             compositeCollection.Clear();
-            Assert.AreEqual(0, compositeCollection.Collections.Count, "Failed to clear internal collections (1)");
+            Assert.HasCount(0, compositeCollection.Collections, "Failed to clear internal collections (1)");
 
             int changeCount = 0;
             compositeCollection.CollectionChanged += (s, e) => changeCount++;
@@ -107,7 +107,58 @@ namespace Knightware.Collections
             Assert.AreEqual(0, changeCount, "Collection is still hooked to the change notifications of it's previous lists");
         }
 
-        private void PopulateCollection(CompositeCollection compositeCollection, int count = 5)
+        [TestMethod]
+        public void ChildCollectionChangePropagatesToComposite()
+        {
+            var compositeCollection = new CompositeCollection();
+            var childCollection = new ObservableCollection<string> { "Item1" };
+            compositeCollection.Add(childCollection);
+
+            int changeCount = 0;
+            compositeCollection.CollectionChanged += (s, e) => changeCount++;
+
+            childCollection.Add("Item2");
+            Assert.AreEqual(1, changeCount, "Child collection change should propagate to composite");
+
+            childCollection.Remove("Item1");
+            Assert.AreEqual(2, changeCount, "Child collection removal should propagate to composite");
+        }
+
+        [TestMethod]
+        public void NonObservableCollectionCanBeAdded()
+        {
+            var compositeCollection = new CompositeCollection();
+            var nonObservableList = new List<string> { "Item1", "Item2" };
+
+            compositeCollection.Add(nonObservableList);
+
+            Assert.HasCount(1, compositeCollection.Collections);
+            Assert.HasCount(2, compositeCollection);
+        }
+
+        [TestMethod]
+        public void MixedObservableAndNonObservableCollections()
+        {
+            var compositeCollection = new CompositeCollection();
+            var observableList = new ObservableCollection<string> { "Observable1" };
+            var nonObservableList = new List<string> { "NonObservable1" };
+
+            compositeCollection.Add(observableList);
+            compositeCollection.Add(nonObservableList);
+
+            int changeCount = 0;
+            compositeCollection.CollectionChanged += (s, e) => changeCount++;
+
+            // Only observable collection changes should trigger events
+            observableList.Add("Observable2");
+            Assert.AreEqual(1, changeCount, "Observable collection change should propagate");
+
+            // Non-observable changes won't trigger (as expected behavior)
+            nonObservableList.Add("NonObservable2");
+            Assert.AreEqual(1, changeCount, "Non-observable collection change should not propagate");
+        }
+
+        private static void PopulateCollection(CompositeCollection compositeCollection, int count = 5)
         {
             for (int i = 0; i < count; i++)
             {

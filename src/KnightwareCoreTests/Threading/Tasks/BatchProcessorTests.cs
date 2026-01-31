@@ -73,7 +73,7 @@ namespace Knightware.Threading.Tasks
             object result = await processor.EnqueueAsync(5);
             stopwatch.Stop();
 
-            Assert.IsTrue(stopwatch.Elapsed.TotalMilliseconds > timeoutMs, "Not enough time passed before patch was processed");
+            Assert.IsGreaterThan(timeoutMs, stopwatch.Elapsed.TotalMilliseconds, "Not enough time passed before patch was processed");
             Console.WriteLine("Item was processed in {0} - timeout was configured for {1} milliseconds", stopwatch.Elapsed, timeoutMs);
         }
 
@@ -102,7 +102,7 @@ namespace Knightware.Threading.Tasks
 
             //Verify we waited the minimum amount of time and that all items were processed in the same batch
             Assert.IsTrue(results.All(r => (int)r.Result == expectedBatchID), "One or more items were not processed in the same batch as the others");
-            Assert.IsTrue(stopwatch.Elapsed.TotalMilliseconds > timeoutMs, "Not enough time passed before patch was processed");
+            Assert.IsGreaterThan(timeoutMs, stopwatch.Elapsed.TotalMilliseconds, "Not enough time passed before patch was processed");
             Console.WriteLine("Items were processed in {0} - timeout was configured for {1} milliseconds", stopwatch.Elapsed, timeoutMs);
         }
 
@@ -187,12 +187,12 @@ namespace Knightware.Threading.Tasks
             //when hitting the max items limit multiple times
             const int maxItemsPerBatch = 15;
             var results = await RunContinuousTestAsync(TimeSpan.FromSeconds(10), 10, 5000, 5000, maxItemsPerBatch);
-            Assert.IsTrue(results.Count > 1, "Expected more items");
+            Assert.IsGreaterThan(1, results.Count, "Expected more items");
 
             for(int i=0 ; i<results.Count; i++)
             {
                 if(i == (results.Count - 1))
-                    Assert.IsTrue(results[i].Item2 <= maxItemsPerBatch, "Invalid number of items in last batch");
+                    Assert.IsLessThanOrEqualTo(maxItemsPerBatch, results[i].Item2, "Invalid number of items in last batch");
                 else
                     Assert.AreEqual(maxItemsPerBatch, results[i].Item2, "Incorrect number of items in batch");
             }
@@ -249,7 +249,7 @@ namespace Knightware.Threading.Tasks
             await Task.Delay(1000);
             
             //Verify we processed the correct number of batches
-            Assert.AreEqual(expectedBatches, batchesSizesProcessed.Count, "Incorrect number of batches processed");
+            Assert.HasCount(expectedBatches, batchesSizesProcessed, "Incorrect number of batches processed");
 
             foreach(int batchSize in batchesSizesProcessed)
                 Assert.AreEqual(expectedItemsPerBatch, batchSize, "Incorrect batch size processed");
